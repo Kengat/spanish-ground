@@ -193,18 +193,29 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
 
 function ProgressBar({ current, total }) { return <div className="lesson-progress"><span style={{ width: `${(current / total) * 100}%` }} /></div> }
 
+function speakSpanish(text) {
+  if (!globalThis.speechSynthesis || !globalThis.SpeechSynthesisUtterance) return
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'es-ES'
+  const voices = speechSynthesis.getVoices()
+  utterance.voice = voices.find((voice) => voice.lang.toLowerCase() === 'es-es')
+    || voices.find((voice) => voice.lang.toLowerCase().startsWith('es'))
+    || null
+  speechSynthesis.cancel()
+  speechSynthesis.speak(utterance)
+}
+
 function Cards({ pack, onAward, onFinish }) {
   const [index, setIndex] = useState(0); const [flipped, setFlipped] = useState(false)
   const items = useMemo(() => shuffle(pack.words), [pack])
   const word = items[index]
-  const reversed = index % 2 === 1
   const next = () => { onAward(); if (index === pack.words.length - 1) onFinish(); else { setIndex(index + 1); setFlipped(false) } }
   return <ExerciseFrame kicker="MAKE IT STICK" title="Say it before you reveal it" current={index + 1} total={pack.words.length}>
     <div className={`flashcard ${flipped ? 'flipped' : ''}`} role="button" tabIndex={0} onClick={() => setFlipped(!flipped)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setFlipped(!flipped) }}>
-      <span className="card-label">{flipped ? (reversed ? 'SPANISH & CONTEXT' : 'MEANING & CONTEXT') : (reversed ? 'ENGLISH → SPANISH' : 'SPANISH → ENGLISH')}</span>
-      <h2>{flipped ? (reversed ? word.es : word.en) : (reversed ? word.en : word.es)}</h2>
+      <span className="card-label">{flipped ? 'MEANING & CONTEXT' : 'SPANISH → ENGLISH'}</span>
+      <h2>{flipped ? word.en : word.es}</h2>
       {flipped ? <p>“{word.example}”</p> : <span className="flip-hint"><RotateCcw size={17} /> Recall it, then reveal</span>}
-      <button className="audio-button" onClick={(e) => { e.stopPropagation(); speechSynthesis?.speak(new SpeechSynthesisUtterance(word.es)) }}><Volume2 /></button>
+      <button className="audio-button" aria-label="Play Spanish pronunciation" onClick={(event) => { event.stopPropagation(); speakSpanish(word.es) }}><Volume2 /></button>
     </div>
     <button className="primary lesson-next" disabled={!flipped} onClick={next}>{index === pack.words.length - 1 ? 'Finish' : 'Got it'} <ArrowRight size={18} /></button>
   </ExerciseFrame>
