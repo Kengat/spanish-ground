@@ -6,8 +6,9 @@ import {
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
 
-const icons = { Coffee, MessagesSquare, Sparkles }
+const icons = { Coffee, MessagesSquare, Sparkles, Brain }
 const modes = [
+  { id: 'guide', label: 'Clear guide', icon: BookOpen, description: 'Understand the idea first — without grammar fog.', requires: 'guide' },
   { id: 'cards', label: 'Two-way deck', icon: Zap, description: 'Flip through every item in alternating directions.' },
   { id: 'match', label: '4×4 Match', icon: Target, description: 'Connect four Spanish phrases with four meanings, round after round.' },
   { id: 'quiz', label: 'Two-way quiz', icon: Brain, description: 'Choose meanings and Spanish phrases in both directions.' },
@@ -100,7 +101,7 @@ function Topbar({ progress }) {
 }
 
 function Dashboard({ packs, progress, onOpen, onImport }) {
-  const featured = packs.find((pack) => pack.id === 'everyday-60') || packs[0]
+  const featured = packs.find((pack) => pack.featured) || packs.find((pack) => pack.id === 'everyday-60') || packs[0]
   return (
     <div className="page dashboard">
       <section className="hero">
@@ -182,6 +183,7 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
     <div className="exercise-shell">
       <header className="exercise-header"><button className="back-button" onClick={onBack}><X size={20} /> Exit</button><div className="exercise-title"><span>{pack.eyebrow}</span><b>{modes.find((m) => m.id === mode)?.label}</b></div><div className="xp-chip"><Sparkles size={16} /> +10 XP</div></header>
       {mode === 'cards' && <Cards pack={pack} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'guide' && <GrammarGuide pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'match' && <Match pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'quiz' && <Quiz pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'builder' && <Builder pack={pack} onAward={onAward} onFinish={onFinish} />}
@@ -192,6 +194,27 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
 }
 
 function ProgressBar({ current, total }) { return <div className="lesson-progress"><span style={{ width: `${(current / total) * 100}%` }} /></div> }
+
+function GrammarGuide({ pack, onAward, onFinish }) {
+  const [index, setIndex] = useState(0)
+  const page = pack.guide[index]
+  const next = () => {
+    onAward(5)
+    if (index === pack.guide.length - 1) onFinish()
+    else setIndex(index + 1)
+  }
+  return <ExerciseFrame kicker="SER VS ESTAR · THE MAP" title={page.title} current={index + 1} total={pack.guide.length}>
+    <div className="grammar-guide">
+      <p className="guide-body">{page.body}</p>
+      <div className="guide-rule">{page.rule}</div>
+      <div className="guide-examples">{page.examples.map(([spanish, note]) => <div key={spanish}><b>{spanish}</b><span>{note}</span></div>)}</div>
+    </div>
+    <div className="guide-actions">
+      <button className="back-button" disabled={index === 0} onClick={() => setIndex(index - 1)}><ArrowLeft size={17} /> Previous</button>
+      <button className="primary" onClick={next}>{index === pack.guide.length - 1 ? 'Start practising' : 'I understand'} <ArrowRight size={18} /></button>
+    </div>
+  </ExerciseFrame>
+}
 
 function speakSpanish(text) {
   if (!globalThis.speechSynthesis || !globalThis.SpeechSynthesisUtterance) return
@@ -283,7 +306,7 @@ function Quiz({ pack, onAward, onFinish }) {
   const next = () => { if (correct) onAward(); if (index === items.length - 1) onFinish(); else { setIndex(index + 1); setPicked(null) } }
   return <ExerciseFrame kicker="TWO-WAY QUIZ" title={item.prompt} current={index + 1} total={items.length}>
     <div className="options">{item.options.map((option, i) => <button key={option} className={`${picked ? (option === item.answer ? 'right' : option === picked ? 'wrong' : '') : ''}`} onClick={() => setPicked(option)}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>
-    {picked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? '¡Muy bien!' : 'Not quite yet.'}</b><p>{correct ? 'That is the natural answer.' : `The answer is “${item.answer}”. Say it once out loud.`}</p></div>}
+    {picked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? '¡Muy bien!' : 'Not quite yet.'}</b><p>{item.explanation || (correct ? 'That is the natural answer.' : `The answer is “${item.answer}”. Say it once out loud.`)}</p></div>}
     <button className="primary lesson-next" disabled={!picked} onClick={next}>{index === items.length - 1 ? 'Finish' : 'Next'} <ArrowRight size={18} /></button>
   </ExerciseFrame>
 }

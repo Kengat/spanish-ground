@@ -1,4 +1,5 @@
 import { sixtyPhrasesPack } from './sixtyPhrases.js'
+import { serEstarPack } from './serEstar.js'
 
 // Add future material here. The exercise engine reads the same shape for every pack.
 export const starterPacks = [
@@ -40,6 +41,7 @@ export const starterPacks = [
     },
   },
   sixtyPhrasesPack,
+  serEstarPack,
   {
     id: 'meet-people',
     title: 'Meet people without sounding robotic',
