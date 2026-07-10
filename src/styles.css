@@ -99,3 +99,38 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
 @media(max-width:420px){
   .topbar .stat-pill span{display:none}.topbar{gap:7px}.hero h1{font-size:31px}.hero p{max-width:220px}.daily-ring{width:68px;height:68px}.continue-copy h2{font-size:27px}.pack-card{padding:22px}.review-hero{padding:25px 21px}.review-hero h1{font-size:31px}.exercise-title span{display:none}.exercise-header .back-button{font-size:0}.match-board{grid-template-columns:1fr 1fr}
 }
+
+/* Pixel-fidelity pass: geometry and hierarchy from the supplied reference. */
+.language-pill{display:inline-flex;align-items:center;gap:9px;margin-top:22px;padding:9px 16px;border:1px solid #f5dfd9;border-radius:999px;background:#fff4f0;color:#9c2943;font-size:12px;font-weight:600}
+.language-pill i{width:3px;height:3px;border-radius:50%;background:#d95b63}
+.progress-summary{display:grid;gap:13px;padding:19px 23px 20px;margin:0 0 32px;border:1px solid #f2e1dc;border-radius:24px;background:rgba(255,255,255,.78);box-shadow:0 14px 34px rgba(105,43,50,.055)}
+.progress-summary-head{display:flex;align-items:center;justify-content:space-between;color:#47363a;font-size:12px}.progress-summary-head span:last-child{color:#96566a}
+.progress-summary-body{display:flex;align-items:center;gap:18px}.progress-ring{width:70px;height:70px;flex:0 0 70px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ff806e var(--progress),#f9e7e2 0);position:relative}
+.progress-ring:after{content:"";position:absolute;inset:7px;border-radius:50%;background:#fffdfb}.progress-ring strong{position:relative;z-index:1;font-size:16px}
+.progress-summary-copy{display:grid;gap:10px;flex:1;font-size:12px;color:#564247}.progress-summary-copy>div{height:7px;background:#f9e8e3;border-radius:99px;overflow:hidden}.progress-summary-copy>div span{display:block;height:100%;min-width:4px;border-radius:99px;background:linear-gradient(90deg,#f26761,#ff8a76)}
+.today-title{margin:0 0 14px;font-size:18px;letter-spacing:-.4px}
+.continue-card{min-height:370px;grid-template-columns:1fr 1.08fr;background:linear-gradient(145deg,#fff8f4 0%,#fde6df 100%);border:1px solid #f0d4cc;color:var(--ink);box-shadow:0 20px 50px rgba(125,52,59,.11)}
+.continue-card:before{display:none}.continue-copy{padding:36px 0 34px 36px;display:flex;flex-direction:column;align-items:flex-start;z-index:3}.continue-copy .eyebrow.light{color:#8e314b;padding-left:27px;position:relative}.continue-copy .eyebrow.light:before{content:"";position:absolute;left:0;top:50%;width:18px;height:18px;border-radius:7px;background:#ffe0d7;transform:translateY(-50%);box-shadow:inset 0 0 0 5px #fff4ef}
+.continue-copy h2{color:#281c1f;font-size:34px;line-height:1.08;margin:28px 0 12px;max-width:410px}.continue-copy p{color:#806c70;max-width:390px;font-size:13px;line-height:1.55;margin:0}
+.lesson-chip{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:14px 17px;min-width:155px;border:1px solid rgba(238,216,209,.9);border-radius:17px;background:rgba(255,253,251,.86);color:#9f2946;font-size:11px}.lesson-chip small{color:#7e6b70}.lesson-chip small:before{content:"◷";margin-right:7px;color:#9d8589}
+.continue-card .light-button{position:absolute;right:30px;bottom:28px;width:58px;height:58px;min-height:58px;padding:0;background:linear-gradient(145deg,#a92b50,#7a1232);color:white;box-shadow:0 13px 24px rgba(119,17,47,.25);z-index:4}
+.lesson-art{position:absolute;right:0;bottom:0;width:59%;height:100%;background-image:linear-gradient(90deg,#fde9e2 0%,rgba(253,233,226,.12) 33%),url('./assets/spanish-courtyard.webp');background-size:cover;background-position:54% center;z-index:1}
+.lesson-art:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#fde9e2 0%,transparent 37%)}
+.continue-progress{display:none}
+
+@media(min-width:1100px){
+  .dashboard{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.38fr);column-gap:22px}.dashboard>.hero,.dashboard>.continue-card,.dashboard>.today-title,.dashboard>.section-heading,.dashboard>.pack-grid,.dashboard>.insight-row{grid-column:1}.dashboard>.progress-summary{grid-column:2;grid-row:1;align-self:center;margin:0}.dashboard>.hero{min-height:150px}.dashboard>.continue-card{margin-top:0}.dashboard>.section-heading,.dashboard>.pack-grid,.dashboard>.insight-row{grid-column:1/-1}
+}
+
+@media(max-width:760px){
+  :root{background:#fffaf8}body:before,body:after{display:none}
+  .app-shell{padding-bottom:86px;background:#fffaf8}.topbar{height:82px;padding:0 25px;border:0;background:#fffaf8;position:relative}.mobile-menu{display:grid;width:34px;height:34px;padding:0;place-items:center}.mobile-menu svg{width:21px}.topbar .stat-pill{display:none}.top-spacer{flex:1}.topbar .round-button{width:42px;height:42px;border:0;background:linear-gradient(145deg,#f5b0a6,#8e2945);box-shadow:inset 0 0 0 5px #fff,0 0 0 1px #f0dcd6;color:white}.topbar .round-button svg{display:none}.topbar .round-button:after{content:"IL";font-size:11px;font-weight:800}
+  .page{padding:15px 24px 42px}.hero{margin:0 0 23px}.hero h1{font-size:31px;letter-spacing:-1.4px;margin:4px 0 3px}.hero p{font-size:14px;color:#9a6673;max-width:none}.hero .daily-ring{display:none}.language-pill{margin-top:19px;padding:8px 15px;font-size:12px}
+  .progress-summary{margin-bottom:29px;padding:17px 19px 18px;border-radius:22px;gap:10px}.progress-ring{width:63px;height:63px;flex-basis:63px}.progress-ring:after{inset:6px}.progress-ring strong{font-size:15px}.progress-summary-copy{font-size:11px}.progress-summary-copy>div{height:6px}
+  .today-title{font-size:17px;margin-bottom:12px}.continue-card{min-height:365px;display:block;border-radius:27px}.continue-copy{position:relative;height:365px;padding:25px 21px;display:flex}.continue-copy h2{font-size:26px;line-height:1.1;max-width:72%;margin:25px 0 10px;z-index:3}.continue-copy p{font-size:12px;max-width:50%;line-height:1.45;z-index:3;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.lesson-chip{margin-top:auto;min-width:134px;padding:12px 14px;z-index:3}.lesson-art{display:block;width:75%;height:78%;right:-9%;bottom:0;background-image:linear-gradient(90deg,#fde9e2 0%,rgba(253,233,226,0) 35%),linear-gradient(0deg,rgba(253,233,226,.12),rgba(253,233,226,.12)),url('./assets/spanish-courtyard.webp');background-position:57% center}.lesson-art:after{background:linear-gradient(90deg,#fde9e2 0%,transparent 42%)}.continue-card .light-button{right:19px;bottom:18px;width:54px;height:54px;min-height:54px}
+  .section-heading{margin-top:35px}.section-heading .kicker{display:none}.section-heading h2{font-size:20px}.pack-card,.new-pack-card{border-radius:23px}.sidebar{height:72px;inset:auto 12px 9px;padding:7px;border-radius:24px}.nav-item{font-size:9px;color:#7f7477}.nav-item:hover,.nav-item.active{background:#fff2ee;color:#841d3e}.nav-item.active svg{fill:#841d3e}.nav-count{background:#f35e5d}
+}
+
+@media(max-width:420px){
+  .page{padding-left:22px;padding-right:22px}.topbar{padding-left:22px;padding-right:22px}.continue-copy h2{font-size:24px}.continue-copy p{max-width:54%}.progress-summary{padding-left:17px;padding-right:17px}
+}

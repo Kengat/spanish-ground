@@ -78,6 +78,10 @@ function App() {
   const swipeStart = useRef(null)
   const packs = useMemo(() => [...starterPacks, ...customPacks], [customPacks])
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [activePack, activeMode, reviewItems, view])
+
   const toggleFlag = (item) => setFlaggedItems((old) => old.some((saved) => saved.id === item.id) ? old.filter((saved) => saved.id !== item.id) : [...old, item])
   const navigate = (nextView) => { setActivePack(null); setActiveMode(null); setReviewItems(null); setView(nextView) }
   const handleTouchStart = (event) => { swipeStart.current = event.touches[0]?.clientX ?? null }
@@ -159,6 +163,9 @@ function Topbar({ progress }) {
 
 function Dashboard({ packs, progress, onOpen, onImport, onReview, flagCount }) {
   const featured = packs.find((pack) => pack.featured) || packs.find((pack) => pack.id === 'everyday-60') || packs[0]
+  const completedModeCount = Object.values(progress.modeCompletions || {}).reduce((total, packModes) => total + (Array.isArray(packModes) ? packModes.length : 0), 0)
+  const totalModeCount = packs.reduce((total, pack) => total + availableModesFor(pack).length, 0)
+  const overallProgress = totalModeCount ? Math.round((completedModeCount / totalModeCount) * 100) : 0
   return (
     <div className="page dashboard">
       <button className="review-peek" onClick={onReview} aria-label={`Open difficult words review, ${flagCount} flagged`}><Flag size={18} fill={flagCount ? 'currentColor' : 'none'} /><span>{flagCount}</span><small>swipe</small></button>
@@ -167,22 +174,29 @@ function Dashboard({ packs, progress, onOpen, onImport, onReview, flagCount }) {
           <span className="kicker">LUNES · YOUR LEARNING GROUND</span>
           <h1>Hola, Illia <span>👋</span></h1>
           <p>Small steps, real Spanish. What are we exploring today?</p>
+          <span className="language-pill">Spanish <i /> A0 Beginner</span>
         </div>
         <div className="daily-ring"><div><strong>2</strong><span>/ 3</span></div><small>today’s<br />activities</small></div>
       </section>
 
+      <section className="progress-summary">
+        <div className="progress-summary-head"><span>Your Progress</span><span>Level A0</span></div>
+        <div className="progress-summary-body">
+          <div className="progress-ring" style={{ '--progress': `${overallProgress * 3.6}deg` }}><strong>{overallProgress}%</strong></div>
+          <div className="progress-summary-copy"><b>{completedModeCount} / {totalModeCount} activities</b><div><span style={{ width: `${overallProgress}%` }} /></div></div>
+        </div>
+      </section>
+
+      <h2 className="today-title">Today’s Lesson</h2>
       <section className="continue-card">
         <div className="continue-copy">
-          <span className="eyebrow light">READY WHEN YOU ARE</span>
+          <span className="eyebrow light">Essentials</span>
           <h2>{featured.title}</h2>
           <p>{featured.description}</p>
-          <button className="primary light-button" onClick={() => onOpen(featured)}>Start marathon <ArrowRight size={18} /></button>
+          <div className="lesson-chip"><span>Phrase of the day</span><small>{featured.minutes} min</small></div>
+          <button className="primary light-button" aria-label={`Open ${featured.title}`} onClick={() => onOpen(featured)}><ArrowRight size={19} /></button>
         </div>
-        <div className="scene-art" aria-hidden="true">
-          <div className="sun" /><div className="awning"><i /><i /><i /><i /><i /></div>
-          <div className="window"><span>CAFÉ</span></div><div className="plant">♧</div>
-          <div className="table"><span>☕</span></div><div className="chair" />
-        </div>
+        <div className="lesson-art" aria-hidden="true" />
         <div className="continue-progress"><span style={{ width: '58%' }} /></div>
       </section>
 
