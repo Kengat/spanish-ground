@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft, ArrowRight, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
-  Coffee, Flag, Flame, Home, Library, Menu, MessagesSquare, Plus, RotateCcw, Settings,
-  Sparkles, Target, Trophy, Volume2, X, Zap,
+  Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Settings,
+  Sparkles, SquareCheckBig, Target, Volume2, X, Zap,
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
 
@@ -136,10 +136,10 @@ function Sidebar({ view, onNavigate, flagCount }) {
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark">ñ</span><span>Spanish<br /><b>Ground</b></span></div>
       <nav>
-        <button className={`nav-item ${view === 'today' ? 'active' : ''}`} onClick={() => onNavigate('today')}><Home size={20} /> Today</button>
-        <button className="nav-item"><Library size={20} /> My library</button>
-        <button className={`nav-item ${view === 'review' ? 'active' : ''}`} onClick={() => onNavigate('review')}><Flag size={20} /> Review {flagCount > 0 && <span className="nav-count">{flagCount}</span>}</button>
-        <button className="nav-item"><Trophy size={20} /> Progress</button>
+        <button className={`nav-item ${view === 'today' ? 'active' : ''}`} onClick={() => onNavigate('today')}><Home size={20} /> Home</button>
+        <button className="nav-item"><MessageSquareText size={20} /> Lessons</button>
+        <button className={`nav-item ${view === 'review' ? 'active' : ''}`} onClick={() => onNavigate('review')}><SquareCheckBig size={20} /> Review {flagCount > 0 && <span className="nav-count">{flagCount}</span>}</button>
+        <button className="nav-item"><CircleUserRound size={20} /> Profile</button>
       </nav>
       <div className="sidebar-bottom">
         <button className="nav-item"><Settings size={20} /> Settings</button>
