@@ -17,7 +17,23 @@ const modes = [
   { id: 'scene', label: 'Real-life scene', icon: MessagesSquare, description: 'Choose what you would actually say in a real moment.', requires: 'scene' },
 ]
 
-const initialProgress = { xp: 120, streak: 3, completed: [], mistakes: 4 }
+const initialProgress = { xp: 120, streak: 3, completed: [], modeCompletions: {}, mistakes: 4 }
+
+function availableModesFor(pack) {
+  return modes.filter((mode) => !mode.requires || pack[mode.requires])
+}
+
+function completedModesFor(progress, packId) {
+  const saved = progress.modeCompletions?.[packId]
+  return Array.isArray(saved) ? saved : []
+}
+
+function masteryFor(progress, pack) {
+  const available = availableModesFor(pack)
+  if (!available.length) return 0
+  const validCompleted = completedModesFor(progress, pack.id).filter((modeId) => available.some((mode) => mode.id === modeId))
+  return Math.round((validCompleted.length / available.length) * 100)
+}
 
 function usePersistedState(key, fallback) {
   const [value, setValue] = useState(() => {
@@ -40,7 +56,7 @@ function App() {
     setProgress((old) => ({
       ...old,
       xp: old.xp + 30,
-      completed: old.completed.includes(activePack.id) ? old.completed : [...old.completed, activePack.id],
+      ...recordModeCompletion(old, activePack, activeMode),
     }))
     setActiveMode(null)
   }
@@ -130,7 +146,7 @@ function Dashboard({ packs, progress, onOpen, onImport }) {
 
       <div className="section-heading"><div><span className="kicker">PICK YOUR PATH</span><h2>Explore your playground</h2></div><button className="text-button" onClick={onImport}><Plus size={17} /> Add material</button></div>
       <section className="pack-grid">
-        {packs.map((pack) => <PackCard key={pack.id} pack={pack} completed={progress.completed.includes(pack.id)} onClick={() => onOpen(pack)} />)}
+        {packs.map((pack) => <PackCard key={pack.id} pack={pack} mastery={masteryFor(progress, pack)} onClick={() => onOpen(pack)} />)}
         <button className="new-pack-card" onClick={onImport}><span><Plus /></span><b>Drop in something new</b><small>Words, phrases, a topic or any text</small></button>
       </section>
 
@@ -142,27 +158,41 @@ function Dashboard({ packs, progress, onOpen, onImport }) {
   )
 }
 
-function PackCard({ pack, completed, onClick }) {
+function recordModeCompletion(progress, pack, modeId) {
+  const previousModes = completedModesFor(progress, pack.id)
+  const nextModes = previousModes.includes(modeId) ? previousModes : [...previousModes, modeId]
+  const availableModeIds = availableModesFor(pack).map((mode) => mode.id)
+  const packComplete = availableModeIds.every((id) => nextModes.includes(id))
+  const completedWithoutPack = (progress.completed || []).filter((id) => id !== pack.id)
+  return {
+    modeCompletions: { ...(progress.modeCompletions || {}), [pack.id]: nextModes },
+    completed: packComplete ? [...completedWithoutPack, pack.id] : completedWithoutPack,
+  }
+}
+
+function PackCard({ pack, mastery, onClick }) {
   const Icon = icons[pack.icon] || BookOpen
   return (
     <button className={`pack-card ${pack.accent}`} onClick={onClick}>
       <div className="pack-icon"><Icon /></div>
       <span className="eyebrow">{pack.eyebrow}</span>
       <h3>{pack.title}</h3><p>{pack.description}</p>
-      <div className="pack-meta"><span>{pack.minutes} min</span><span>•</span><span>{pack.words.length} words</span>{completed && <span className="completed"><Check size={13} /> Done</span>}<ArrowRight size={18} /></div>
+      <div className="pack-meta"><span>{pack.minutes} min</span><span>•</span><span>{pack.words.length} words</span>{mastery > 0 && <span className="completed">{mastery === 100 && <Check size={13} />}{mastery === 100 ? 'Done' : `${mastery}%`}</span>}<ArrowRight size={18} /></div>
     </button>
   )
 }
 
 function PackOverview({ pack, progress, onBack, onStart }) {
   const Icon = icons[pack.icon] || BookOpen
-  const availableModes = modes.filter((mode) => !mode.requires || pack[mode.requires])
+  const availableModes = availableModesFor(pack)
+  const completedModes = completedModesFor(progress, pack.id).filter((modeId) => availableModes.some((mode) => mode.id === modeId))
+  const mastery = masteryFor(progress, pack)
   return (
     <div className="page pack-page">
       <button className="back-button" onClick={onBack}><ArrowLeft size={17} /> Back to playground</button>
       <section className={`pack-hero ${pack.accent}`}>
         <div className="pack-hero-icon"><Icon /></div><div><span className="eyebrow">{pack.eyebrow}</span><h1>{pack.title}</h1><p>{pack.description}</p></div>
-        <div className="pack-score"><b>{progress.completed.includes(pack.id) ? '100%' : '0%'}</b><span>mastery</span></div>
+        <div className="pack-score"><b>{mastery}%</b><span>mastery · {completedModes.length}/{availableModes.length} modes</span></div>
       </section>
       <div className="section-heading"><div><span className="kicker">CHOOSE A MODE</span><h2>How do you want to practise?</h2></div></div>
       <section className="mode-grid">
@@ -170,7 +200,7 @@ function PackOverview({ pack, progress, onBack, onStart }) {
           <button key={mode.id} className="mode-card" onClick={() => onStart(mode.id)}>
             <span className="mode-number">0{index + 1}</span><span className="mode-icon"><IconMode /></span><h3>{mode.label}</h3>
             <p>{mode.description}</p>
-            <span className="mode-start">Start <ArrowRight size={17} /></span>
+            <span className={`mode-start ${completedModes.includes(mode.id) ? 'mode-complete' : ''}`}>{completedModes.includes(mode.id) ? <><Check size={17} /> Completed</> : <>Start <ArrowRight size={17} /></>}</span>
           </button>
         )})}
       </section>
@@ -314,14 +344,34 @@ function Quiz({ pack, onAward, onFinish }) {
 function Builder({ pack, onAward, onFinish }) {
   const [index, setIndex] = useState(0); const [chosen, setChosen] = useState([]); const [checked, setChecked] = useState(false)
   const items = useMemo(() => pack.generatedBuilder ? shuffle(pack.words).map((word) => ({ translation: word.en, answer: word.es.split(' ') })) : pack.builder, [pack])
-  const item = items[index]; const shuffled = useMemo(() => shuffle(item.answer), [item]); const correct = chosen.join(' ') === item.answer.join(' ')
+  const item = items[index]
+  const prepared = useMemo(() => prepareBuilderItem(item), [item])
+  const shuffled = useMemo(() => shuffle(prepared.tokens), [prepared])
+  const correct = chosen.join(' ') === prepared.tokens.join(' ')
   const next = () => { if (correct) onAward(); if (index === items.length - 1) onFinish(); else { setIndex(index + 1); setChosen([]); setChecked(false) } }
   return <ExerciseFrame kicker="SENTENCE LAB" title={item.translation} current={index + 1} total={items.length}>
+    <div className="sentence-pattern" aria-label="Sentence punctuation pattern">{prepared.pattern}</div>
     <div className={`sentence-drop ${checked ? correct ? 'right' : 'wrong' : ''}`}>{chosen.length ? chosen.map((word, i) => <button key={`${word}-${i}`} onClick={() => !checked && setChosen(chosen.filter((_, n) => n !== i))}>{word}</button>) : <span>Build the sentence here…</span>}</div>
     <div className="word-bank">{shuffled.map((word, i) => { const used = chosen.filter((x) => x === word).length >= shuffled.slice(0, i + 1).filter((x) => x === word).length; return <button key={`${word}-${i}`} disabled={used || checked} onClick={() => setChosen([...chosen, word])}>{word}</button> })}</div>
-    {checked && !correct && <div className="feedback negative"><b>Almost—look at the word order.</b><p>{item.answer.join(' ')}</p></div>}
+    {checked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? '¡Perfecto!' : 'Almost—look at the word order.'}</b><p>{prepared.canonical}</p></div>}
     {!checked ? <button className="primary lesson-next" disabled={!chosen.length} onClick={() => setChecked(true)}>Check sentence <Check size={18} /></button> : <button className="primary lesson-next" onClick={next}>{index === items.length - 1 ? 'Finish' : 'Next'} <ArrowRight size={18} /></button>}
   </ExerciseFrame>
+}
+
+function prepareBuilderItem(item) {
+  const canonical = item.answer.join(' ')
+  const firstToken = item.answer[0] || ''
+  const lastToken = item.answer.at(-1) || ''
+  const opening = firstToken.match(/^[¿¡]/)?.[0] || ''
+  const closing = lastToken.match(/[.!?]$/)?.[0] || ''
+  const tokens = item.answer.map((token, index) => {
+    let clean = token
+    if (index === 0 && opening) clean = clean.slice(1)
+    if (index === item.answer.length - 1 && closing) clean = clean.slice(0, -1)
+    return clean.toLocaleLowerCase('es')
+  })
+  const pattern = opening ? `${opening} ______ ${closing || (opening === '¿' ? '?' : '!')}` : `______${closing}`
+  return { canonical, tokens, pattern }
 }
 
 function Vocabulary({ pack, onAward, onFinish }) {
