@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ArrowLeft, ArrowRight, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
+  ArrowLeft, ArrowRight, Bookmark, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
   Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Settings,
   Sparkles, SquareCheckBig, Target, Volume2, X, Zap,
 } from 'lucide-react'
@@ -64,6 +64,14 @@ function FlagButton({ pack, item, className = '' }) {
   if (!flagItem) return null
   const active = flaggedItems.some((saved) => saved.id === flagItem.id)
   return <button type="button" className={`flag-button ${active ? 'active' : ''} ${className}`} aria-label={active ? `Remove ${flagItem.es} from difficult words` : `Flag ${flagItem.es} as difficult`} aria-pressed={active} onClick={(event) => { event.stopPropagation(); toggleFlag(flagItem) }}><Flag size={17} fill={active ? 'currentColor' : 'none'} /></button>
+}
+
+function BookmarkButton({ pack, item, className = '' }) {
+  const { flaggedItems, toggleFlag } = useContext(FlagContext)
+  const savedItem = flagItemFor(pack, item)
+  if (!savedItem) return null
+  const active = flaggedItems.some((saved) => saved.id === savedItem.id)
+  return <button type="button" className={`bookmark-button ${active ? 'active' : ''} ${className}`} aria-label={active ? `Remove ${savedItem.es} from difficult words` : `Save ${savedItem.es} for review`} aria-pressed={active} onClick={(event) => { event.stopPropagation(); toggleFlag(savedItem) }}><Bookmark size={18} fill={active ? 'currentColor' : 'none'} /></button>
 }
 
 function App() {
@@ -265,9 +273,10 @@ function PackOverview({ pack, progress, onBack, onStart }) {
 }
 
 function Exercise({ pack, mode, onBack, onAward, onFinish }) {
+  const cardMode = mode === 'cards'
   return (
-    <div className="exercise-shell">
-      <header className="exercise-header"><button className="back-button" onClick={onBack}><X size={20} /> Exit</button><div className="exercise-title"><span>{pack.eyebrow}</span><b>{modes.find((m) => m.id === mode)?.label}</b></div><div className="xp-chip"><Sparkles size={16} /> +10 XP</div></header>
+    <div className={`exercise-shell ${cardMode ? 'cards-exercise' : ''}`}>
+      <header className={`exercise-header ${cardMode ? 'ask-find-header' : ''}`}><button className="back-button" aria-label={cardMode ? 'Back' : 'Exit'} onClick={onBack}>{cardMode ? <ArrowLeft size={20} /> : <><X size={20} /> Exit</>}</button><div className="exercise-title">{!cardMode && <span>{pack.eyebrow}</span>}<b>{cardMode ? 'Ask & Find' : modes.find((m) => m.id === mode)?.label}</b></div>{cardMode ? <button className="ask-header-bookmark" aria-label="Saved phrases"><Bookmark size={20} /></button> : <div className="xp-chip"><Sparkles size={16} /> +10 XP</div>}</header>
       {mode === 'cards' && <Cards pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'guide' && <GrammarGuide pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'match' && <Match pack={pack} onAward={onAward} onFinish={onFinish} />}
@@ -319,16 +328,18 @@ function Cards({ pack, onAward, onFinish }) {
   const items = useMemo(() => shuffle(pack.words), [pack])
   const word = items[index]
   const next = () => { onAward(); if (index === pack.words.length - 1) onFinish(); else { setIndex(index + 1); setFlipped(false) } }
-  return <ExerciseFrame kicker="MAKE IT STICK" title="Say it before you reveal it" current={index + 1} total={pack.words.length}>
-    <div className={`flashcard ${flipped ? 'flipped' : ''}`} role="button" tabIndex={0} onClick={() => setFlipped(!flipped)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setFlipped(!flipped) }}>
-      <FlagButton pack={pack} item={word} className="card-flag" />
-      <span className="card-label">{flipped ? 'MEANING & CONTEXT' : 'SPANISH → ENGLISH'}</span>
-      <h2>{flipped ? word.en : word.es}</h2>
-      {flipped ? <p>“{word.example}”</p> : <span className="flip-hint"><RotateCcw size={17} /> Recall it, then reveal</span>}
-      <button className="audio-button" aria-label="Play Spanish pronunciation" onClick={(event) => { event.stopPropagation(); speakSpanish(word.es) }}><Volume2 /></button>
-    </div>
-    <button className="primary lesson-next" disabled={!flipped} onClick={next}>{index === pack.words.length - 1 ? 'Finish' : 'Got it'} <ArrowRight size={18} /></button>
-  </ExerciseFrame>
+  const reveal = () => setFlipped(true)
+  return <main className="ask-find-main">
+    <div className="ask-language">Spanish <ArrowRight size={14} /> English</div>
+    <section className={`ask-phrase-card ${flipped ? 'revealed' : ''}`} role="button" tabIndex={0} onClick={reveal} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') reveal() }}>
+      <h1>{word.es}</h1>
+      <button className="ask-audio" aria-label="Play Spanish pronunciation" onClick={(event) => { event.stopPropagation(); speakSpanish(word.es); reveal() }}><Volume2 /></button>
+      <BookmarkButton pack={pack} item={word} className="ask-card-bookmark" />
+    </section>
+    <section className="listen-prompt"><div><Sparkles size={20} /><b>Listen and remember the phrase</b></div><p>Tap the speaker to hear how it’s pronounced. Then say it out loud!</p></section>
+    <div className="ask-meaning"><span>✨ Meaning</span><b>{word.en}</b></div>
+    <button className="primary ask-got" disabled={!flipped} onClick={next}>{index === pack.words.length - 1 ? 'Finish' : 'Got it'} <ArrowRight size={18} /></button>
+  </main>
 }
 
 function shuffle(items) {

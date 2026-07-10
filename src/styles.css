@@ -161,6 +161,23 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
   .lesson-art:after{display:none}.continue-copy{position:relative;grid-column:1/-1;width:100%;height:100%;z-index:3}.continue-copy h2{max-width:340px}.continue-copy p{max-width:350px}.continue-card .light-button{z-index:4}
 }
 
+/* Ask & Find deck — measured from the supplied 340 × 768 reference. */
+.cards-exercise{min-height:100dvh;background:linear-gradient(155deg,#fffaf7 0%,#fef7f3 100%);color:#171113}
+.ask-find-header{height:88px;padding:0 max(24px,calc((100% - 340px)/2 + 12px));border:0;background:rgba(255,250,247,.96);position:relative;top:auto;backdrop-filter:none}
+.ask-find-header .back-button{width:34px;height:34px;padding:0;font-size:0;justify-content:center}.ask-find-header .exercise-title b{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;letter-spacing:-.35px}.ask-header-bookmark{width:36px;height:36px;padding:0;border:0;background:transparent;display:grid;place-items:center;color:#171113;cursor:pointer}
+.ask-find-main{width:min(100%,340px);margin:0 auto;padding:20px 28px 18px}
+.ask-language{width:max-content;height:32px;margin:0 auto;display:flex;align-items:center;gap:7px;padding:0 17px;border:1px solid #f2ddd7;border-radius:999px;background:#fff2ed;color:#8e2440;font-size:11px}.ask-language svg{color:#ae4c60}
+.ask-phrase-card{height:302px;margin-top:27px;border:1px solid #f0ddd8;border-radius:25px;background:rgba(255,254,253,.96);box-shadow:0 14px 36px rgba(111,42,53,.045);position:relative;display:grid;place-items:center;padding:34px 22px 92px;text-align:center;cursor:pointer;overflow:hidden;transition:border-color .18s,box-shadow .18s}.ask-phrase-card:before{content:"";position:absolute;left:0;bottom:70px;width:62px;height:90px;background-image:radial-gradient(#f9d4c8 1.2px,transparent 1.2px);background-size:9px 9px;opacity:.52}.ask-phrase-card.revealed{border-color:#edcfc6;box-shadow:0 17px 40px rgba(117,35,52,.08)}
+.ask-phrase-card h1{max-width:250px;margin:0;font-family:'DM Sans',sans-serif;font-size:clamp(38px,12vw,51px);font-weight:700;line-height:1.05;letter-spacing:-1.8px;color:#7e1738;position:relative;z-index:1}
+.ask-audio{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);width:70px;height:70px;border:1px solid #f0d7d0;border-radius:50%;background:linear-gradient(145deg,#fff8f4,#fde9e2);color:#751631;display:grid;place-items:center;box-shadow:0 11px 24px rgba(128,37,55,.11);cursor:pointer}.ask-audio svg{width:29px;height:29px;stroke-width:2.4}.bookmark-button{border:1px solid #efddd8;background:#fffdfb;color:#7d1734;display:grid;place-items:center;cursor:pointer}.bookmark-button.active{background:#851c3e;border-color:#851c3e;color:white}.ask-card-bookmark{position:absolute;right:15px;bottom:22px;width:42px;height:42px;border-radius:50%}
+.listen-prompt{margin:20px 4px 0;text-align:left}.listen-prompt>div{display:flex;align-items:center;gap:8px}.listen-prompt svg{color:#f35f5d}.listen-prompt b{font-size:12px}.listen-prompt p{margin:9px 0 0 28px;color:#806c70;font-size:11px;line-height:17px}
+.ask-meaning{height:64px;margin:16px 0 0;padding:11px 17px;border:1px solid #f1ddd7;border-radius:16px;background:linear-gradient(145deg,#fff4ef,#fde8e1);display:flex;flex-direction:column;justify-content:center;gap:5px;text-align:left}.ask-meaning span{font-size:10px;color:#7e6b70}.ask-meaning b{font-size:13px;font-weight:500;color:#3d3033}
+.ask-got{width:100%;height:50px;min-height:50px;margin-top:16px;padding:0 20px;justify-content:center;position:relative;background:linear-gradient(135deg,#a3274c,#781432);box-shadow:0 11px 22px rgba(125,20,53,.19)}.ask-got svg{position:absolute;right:20px}.ask-got:disabled{opacity:1;color:white;background:linear-gradient(135deg,#a3274c,#781432)}
+
+@media(max-height:740px){
+  .ask-find-header{height:76px}.ask-find-main{padding-top:14px}.ask-phrase-card{height:278px;margin-top:19px}.listen-prompt{margin-top:14px}.listen-prompt p{margin-top:5px}.ask-meaning{height:58px;margin-top:10px}.ask-got{height:46px;min-height:46px;margin-top:10px}
+}
+
 @media(max-width:380px){
   .topbar{padding-left:25px;padding-right:25px}.page{padding-left:24px;padding-right:24px}.hero h1{font-size:26px}.progress-summary{height:101px}.continue-card{height:250px;min-height:250px}.continue-copy{height:250px}.continue-copy h2{font-size:20px}.sidebar{left:15px;right:15px}
 }
