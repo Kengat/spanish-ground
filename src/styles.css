@@ -194,6 +194,13 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
   .ask-find-header{height:58px}.ask-find-main{padding-top:0}.ask-language{height:32px;margin-top:9px}.ask-phrase-card{height:292px;margin-top:14px}.listen-prompt{margin-top:12px}.ask-got{height:46px;min-height:46px;margin-top:12px}
 }
 
+/* Touch polish and organic halftone fields on both card faces. */
+.cards-exercise,.cards-exercise button,.cards-exercise [role="button"]{-webkit-tap-highlight-color:transparent}.cards-exercise ::selection{background:transparent;color:inherit}.ask-phrase-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;outline:none}.ask-phrase-card:focus-visible{outline:2px solid rgba(139,27,61,.55);outline-offset:4px}
+.ask-card-front:before,.ask-card-back:before{content:"";display:block;position:absolute;pointer-events:none;border-radius:50%;background-image:radial-gradient(circle,#ef9f8c 0 1.25px,transparent 1.45px);background-size:9px 9px;-webkit-mask-image:radial-gradient(ellipse at 45% 52%,#000 0 22%,rgba(0,0,0,.88) 38%,rgba(0,0,0,.48) 57%,transparent 78%);mask-image:radial-gradient(ellipse at 45% 52%,#000 0 22%,rgba(0,0,0,.88) 38%,rgba(0,0,0,.48) 57%,transparent 78%)}
+.ask-card-front:before{left:-52px;bottom:24px;width:196px;height:188px;opacity:.54;transform:rotate(-8deg)}
+.ask-card-back:before{right:-58px;top:8px;width:222px;height:204px;opacity:.38;transform:rotate(11deg);background-image:radial-gradient(circle,#dc8b7d 0 1.2px,transparent 1.45px);background-size:10px 10px;-webkit-mask-image:radial-gradient(ellipse at 52% 46%,#000 0 18%,rgba(0,0,0,.84) 36%,rgba(0,0,0,.42) 58%,transparent 79%);mask-image:radial-gradient(ellipse at 52% 46%,#000 0 18%,rgba(0,0,0,.84) 36%,rgba(0,0,0,.42) 58%,transparent 79%)}
+.ask-card-back>span,.ask-card-back>h1,.ask-card-back>p,.ask-card-back>small{z-index:1}
+
 @media(max-width:380px){
   .topbar{padding-left:25px;padding-right:25px}.page{padding-left:24px;padding-right:24px}.hero h1{font-size:26px}.progress-summary{height:101px}.continue-card{height:250px;min-height:250px}.continue-copy{height:250px}.continue-copy h2{font-size:20px}.sidebar{left:15px;right:15px}
 }
