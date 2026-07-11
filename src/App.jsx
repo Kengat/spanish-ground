@@ -74,6 +74,10 @@ function BookmarkButton({ pack, item, className = '' }) {
   return <button type="button" className={`bookmark-button ${active ? 'active' : ''} ${className}`} aria-label={active ? `Remove ${savedItem.es} from difficult words` : `Save ${savedItem.es} for review`} aria-pressed={active} onClick={(event) => { event.stopPropagation(); toggleFlag(savedItem) }}><Bookmark size={18} fill={active ? 'currentColor' : 'none'} /></button>
 }
 
+function SpeakerIcon() {
+  return <svg viewBox="0 0 118.6 100" aria-hidden="true"><path d="m55 3c-3 0-6.1 1.6-8.2 3l-21.9 18.8h-10.4c-4.5 0-10.9 4.4-10.9 12.2v25.7c0 7.5 5.4 12.3 10.9 12.3h10.9l21.3 18.3c1.4 2.5 3.9 3.7 8.1 3.7 4.5 0 8-3.5 8.3-8v-78c-0.1-4-3.5-8-8.1-8zm-33.8 62.3h-6.2c-1.8 0-3-1.3-3-3.3v-24.6c0-1.8 1.3-3.4 3-3.4h6.2v31.3zm27.6 16.7-19.1-16.5v-31.9l19.1-15.6v64z" /><path d="m86.4 31.6c-4.3-1.6-7.2 2.4-7.1 4.4s1.7 4 1.7 4 3.6 3.7 3.8 9.5c-0.5 5.1-3.8 9.2-3.8 9.2s-1.7 1.3-2.1 3.3c-0.3 2.2 2.1 5.9 5.9 4.9 1.9-0.3 8.8-7.2 8.8-16.9 0.3-10.8-6.3-18-7.2-18.4z" /><path d="m104 16.9c-2.3-2.9-7.6-2.1-7.8 2.9-0.1 2 1.7 3.9 1.7 3.9s8.4 9.9 8.7 24.3c-0.1 13.9-5.4 23.7-9.7 29.2-3.5 4.8 0.5 8.7 4 7.8 3.7-0.9 14.8-17.4 14.8-36.3 0.1-16.9-8.3-28.7-11.7-31.8z" /></svg>
+}
+
 function App() {
   const [customPacks, setCustomPacks] = usePersistedState('sg-custom-packs', [])
   const [progress, setProgress] = usePersistedState('sg-progress', initialProgress)
@@ -328,16 +332,18 @@ function Cards({ pack, onAward, onFinish }) {
   const items = useMemo(() => shuffle(pack.words), [pack])
   const word = items[index]
   const next = () => { onAward(); if (index === pack.words.length - 1) onFinish(); else { setIndex(index + 1); setFlipped(false) } }
-  const reveal = () => setFlipped(true)
+  const toggleCard = () => setFlipped((old) => !old)
+  const progress = ((index + 1) / items.length) * 4
   return <main className="ask-find-main">
+    <div className="ask-progress-row"><div className="ask-progress-segments">{[0, 1, 2, 3].map((segment) => <i key={segment}><span style={{ width: `${Math.max(0, Math.min(100, (progress - segment) * 100))}%` }} /></i>)}</div><b>{index + 1} / {items.length}</b></div>
     <div className="ask-language">Spanish <ArrowRight size={14} /> English</div>
-    <section className={`ask-phrase-card ${flipped ? 'revealed' : ''}`} role="button" tabIndex={0} onClick={reveal} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') reveal() }}>
-      <h1>{word.es}</h1>
-      <button className="ask-audio" aria-label="Play Spanish pronunciation" onClick={(event) => { event.stopPropagation(); speakSpanish(word.es); reveal() }}><Volume2 /></button>
-      <BookmarkButton pack={pack} item={word} className="ask-card-bookmark" />
+    <section className={`ask-phrase-card ${flipped ? 'flipped' : ''}`} role="button" tabIndex={0} onClick={toggleCard} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') toggleCard() }}>
+      <div className="ask-card-inner">
+        <div className="ask-card-face ask-card-front"><h1>{word.es}</h1><button className="ask-audio" aria-label="Play Spanish pronunciation" onClick={(event) => { event.stopPropagation(); speakSpanish(word.es) }}><SpeakerIcon /></button><BookmarkButton pack={pack} item={word} className="ask-card-bookmark" /></div>
+        <div className="ask-card-face ask-card-back"><span>ENGLISH MEANING</span><h1>{word.en}</h1>{word.example && <p>“{word.example}”</p>}<small>Tap to see Spanish</small></div>
+      </div>
     </section>
     <section className="listen-prompt"><div><Sparkles size={20} /><b>Listen and remember the phrase</b></div><p>Tap the speaker to hear how it’s pronounced. Then say it out loud!</p></section>
-    <div className="ask-meaning"><span>✨ Meaning</span><b>{word.en}</b></div>
     <button className="primary ask-got" disabled={!flipped} onClick={next}>{index === pack.words.length - 1 ? 'Finish' : 'Got it'} <ArrowRight size={18} /></button>
   </main>
 }
