@@ -13,6 +13,7 @@ const modes = [
   { id: 'match', label: '4×4 Match', icon: Target, description: 'Connect four Spanish phrases with four meanings, round after round.' },
   { id: 'quiz', label: 'Two-way quiz', icon: Brain, description: 'Choose meanings and Spanish phrases in both directions.' },
   { id: 'builder', label: 'Sentence lab', icon: BookOpen, description: 'Build Spanish with your hands and feel the word order.' },
+  { id: 'compose', label: 'Write it yourself', icon: MessageSquareText, description: 'Create the whole sentence from memory and get a useful check.', requires: 'compose' },
   { id: 'vocab', label: 'Word focus', icon: Sparkles, description: 'Pull the important individual words out of the full phrases.', requires: 'vocabulary' },
   { id: 'scene', label: 'Real-life scene', icon: MessagesSquare, description: 'Choose what you would actually say in a real moment.', requires: 'scene' },
 ]
@@ -286,6 +287,7 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
       {mode === 'match' && <Match pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'quiz' && <Quiz pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'builder' && <Builder pack={pack} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'compose' && <Composer pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'vocab' && <Vocabulary pack={pack} onAward={onAward} onFinish={onFinish} />}
       {mode === 'scene' && <Scene pack={pack} onAward={onAward} onFinish={onFinish} />}
     </div>
@@ -302,7 +304,7 @@ function GrammarGuide({ pack, onAward, onFinish }) {
     if (index === pack.guide.length - 1) onFinish()
     else setIndex(index + 1)
   }
-  return <ExerciseFrame kicker="SER VS ESTAR · THE MAP" title={page.title} current={index + 1} total={pack.guide.length}>
+  return <ExerciseFrame kicker={pack.guideKicker || 'CLEAR GUIDE · THE MAP'} title={page.title} current={index + 1} total={pack.guide.length}>
     <div className="grammar-guide">
       <p className="guide-body">{page.body}</p>
       <div className="guide-rule">{page.rule}</div>
@@ -399,7 +401,7 @@ function Match({ pack, onAward, onFinish }) {
       <div>{meanings.map((item) => <button key={item.es} disabled={matched.includes(item.es)} className={rightPick?.es === item.es ? 'selected' : ''} onClick={() => pickRight(item)}>{item.en}</button>)}</div>
     </div>
     <div className={`match-message ${message.startsWith('¡') ? 'good' : ''}`}>{message || `${matched.length} of ${batch.length} matched`}</div>
-    <button className="primary lesson-next" disabled={matched.length !== batch.length} onClick={nextRound}>{round === totalRounds - 1 ? 'Finish all 60' : 'Next four'} <ArrowRight size={18} /></button>
+    <button className="primary lesson-next" disabled={matched.length !== batch.length} onClick={nextRound}>{round === totalRounds - 1 ? 'Finish matching' : 'Next four'} <ArrowRight size={18} /></button>
   </ExerciseFrame>
 }
 
@@ -449,6 +451,62 @@ function prepareBuilderItem(item) {
   })
   const pattern = opening ? `${opening} ______ ${closing || (opening === '¿' ? '?' : '!')}` : `______${closing}`
   return { canonical, tokens, pattern }
+}
+
+function normalizeWrittenSpanish(value, ignoreAccents = false) {
+  const normalized = value
+    .toLocaleLowerCase('es')
+    .replace(/[¿¡!?.,;:«»“”"']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter((word) => word !== 'yo')
+    .join(' ')
+  return ignoreAccents ? normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : normalized
+}
+
+function checkWrittenAnswer(value, item) {
+  const exact = normalizeWrittenSpanish(value)
+  const accepted = item.accepted.map((answer) => normalizeWrittenSpanish(answer))
+  if (accepted.includes(exact)) return { status: 'correct', title: '¡Muy bien!', message: item.explanation }
+
+  const loose = normalizeWrittenSpanish(value, true)
+  const acceptedLoose = item.accepted.map((answer) => normalizeWrittenSpanish(answer, true))
+  if (acceptedLoose.includes(loose)) return { status: 'close', title: 'Смысл верный — поправь ударение.', message: `Напиши так: ${item.answer}` }
+  if (/\btrabajar\b/i.test(value)) return { status: 'wrong', title: 'Нужна форма глагола.', message: 'Для «я работаю» используй trabajo, а trabajar означает «работать».' }
+  if (/\bvolver\b/i.test(value)) return { status: 'wrong', title: 'Инфинитив нужно изменить.', message: 'Для «я возвращаюсь» используй vuelvo, а не volver.' }
+  if (/\bno\s+(tiempo|aquí|allí|ahora)\b/i.test(value)) return { status: 'wrong', title: 'Поставь no перед глаголом.', message: `Один естественный вариант: ${item.answer}` }
+  return { status: 'wrong', title: 'Пока не сходится.', message: `Сравни с рабочим вариантом: ${item.answer}` }
+}
+
+function Composer({ pack, onAward, onFinish }) {
+  const [index, setIndex] = useState(0)
+  const [value, setValue] = useState('')
+  const [result, setResult] = useState(null)
+  const [hint, setHint] = useState(false)
+  const item = pack.compose[index]
+  const check = () => setResult(checkWrittenAnswer(value, item))
+  const next = () => {
+    if (result?.status === 'correct') onAward(12)
+    if (index === pack.compose.length - 1) onFinish()
+    else { setIndex(index + 1); setValue(''); setResult(null); setHint(false) }
+  }
+
+  return <ExerciseFrame kicker="CREATE SENTENCES · NO WORD BANK" title={item.prompt} current={index + 1} total={pack.compose.length}>
+    <div className="compose-card">
+      <label htmlFor="sentence-answer">Твоя фраза</label>
+      <textarea id="sentence-answer" value={value} disabled={result?.status === 'correct'} placeholder="Escribe en español…" autoCapitalize="sentences" spellCheck="false" onChange={(event) => { setValue(event.target.value); setResult(null) }} />
+      <div className="compose-tools">
+        <button type="button" className="compose-hint-button" onClick={() => setHint((old) => !old)}><Sparkles size={16} /> {hint ? 'Скрыть опору' : 'Нужна опора?'}</button>
+        <span>{value.trim().split(/\s+/).filter(Boolean).length} words</span>
+      </div>
+      {hint && <div className="compose-hint">{item.hint}</div>}
+    </div>
+    {result && <div className={`feedback compose-feedback ${result.status === 'correct' ? 'positive' : 'negative'} ${result.status}`}><b>{result.title}</b><p>{result.message}</p></div>}
+    {!result || result.status !== 'correct'
+      ? <button className="primary lesson-next" disabled={!value.trim()} onClick={check}>Проверить фразу <Check size={18} /></button>
+      : <button className="primary lesson-next" onClick={next}>{index === pack.compose.length - 1 ? 'Завершить урок' : 'Следующая фраза'} <ArrowRight size={18} /></button>}
+  </ExerciseFrame>
 }
 
 function quizFlagItem(pack, item) {

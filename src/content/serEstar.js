@@ -1,6 +1,5 @@
 export const serEstarPack = {
   id: 'ser-vs-estar',
-  featured: true,
   title: 'Ser vs Estar — finally clear',
   eyebrow: 'Grammar without pain · A1',
   description: 'Understand the real difference, learn the forms and choose naturally in everyday situations.',

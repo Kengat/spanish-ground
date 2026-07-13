@@ -1,8 +1,10 @@
 import { sixtyPhrasesPack } from './sixtyPhrases.js'
 import { serEstarPack } from './serEstar.js'
+import { joseSentenceLesson } from './joseSentenceLesson.js'
 
 // Add future material here. The exercise engine reads the same shape for every pack.
 export const starterPacks = [
+  joseSentenceLesson,
   {
     id: 'barcelona-first-week',
     title: 'Your first week in Barcelona',

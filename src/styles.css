@@ -201,6 +201,19 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
 .ask-card-back:before{right:-58px;top:8px;width:222px;height:204px;opacity:.38;transform:rotate(11deg);background-image:radial-gradient(circle,#dc8b7d 0 1.2px,transparent 1.45px);background-size:10px 10px;-webkit-mask-image:radial-gradient(ellipse at 52% 46%,#000 0 18%,rgba(0,0,0,.84) 36%,rgba(0,0,0,.42) 58%,transparent 79%);mask-image:radial-gradient(ellipse at 52% 46%,#000 0 18%,rgba(0,0,0,.84) 36%,rgba(0,0,0,.42) 58%,transparent 79%)}
 .ask-card-back>span,.ask-card-back>h1,.ask-card-back>p,.ask-card-back>small{z-index:1}
 
+/* Guided free writing for the José sentence-building lesson. */
+.compose-card{max-width:660px;margin:0 auto;padding:25px;border:1px solid #f0ddd8;border-radius:25px;background:rgba(255,253,251,.96);box-shadow:0 16px 42px rgba(111,42,53,.065);text-align:left}
+.compose-card label{display:block;margin-bottom:10px;color:#9b2948;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.compose-card textarea{display:block;width:100%;min-height:132px;resize:vertical;padding:18px 19px;border:1px solid #ebd4ce;border-radius:18px;outline:0;background:#fff9f6;color:#27191c;font:700 22px/1.45 'DM Sans',sans-serif;transition:border-color .18s,box-shadow .18s}
+.compose-card textarea::placeholder{color:#c4a8ac;font-weight:500}.compose-card textarea:focus{border-color:#bc7180;box-shadow:0 0 0 4px rgba(159,41,70,.08)}.compose-card textarea:disabled{opacity:1;color:#60172e;background:#fff3ee}
+.compose-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}.compose-tools>span{color:#a4898f;font-size:10px}.compose-hint-button{display:flex;align-items:center;gap:7px;padding:8px 10px;border:0;border-radius:10px;background:#fce9e4;color:#922040;font-size:11px;font-weight:700;cursor:pointer}.compose-hint-button svg{color:#f05f5c}
+.compose-hint{margin-top:12px;padding:12px 14px;border-radius:13px;background:linear-gradient(145deg,#fff1eb,#fde2d9);color:#7d3347;font-size:13px;font-weight:600;word-spacing:5px}
+.compose-feedback{max-width:660px;margin:16px auto 0}.compose-feedback.close{background:#fff1db;border:1px solid #efcf9c}.compose-feedback.close b{color:#8a5b16}
+
+@media(max-width:560px){
+  .compose-card{padding:17px;border-radius:21px}.compose-card textarea{min-height:120px;padding:15px;font-size:19px}.compose-tools{align-items:flex-end}.compose-hint{font-size:12px;line-height:1.5}.compose-feedback{margin-top:13px}
+}
+
 @media(max-width:380px){
   .topbar{padding-left:25px;padding-right:25px}.page{padding-left:24px;padding-right:24px}.hero h1{font-size:26px}.progress-summary{height:101px}.continue-card{height:250px;min-height:250px}.continue-copy{height:250px}.continue-copy h2{font-size:20px}.sidebar{left:15px;right:15px}
 }
