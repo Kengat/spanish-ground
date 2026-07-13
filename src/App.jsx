@@ -5,6 +5,7 @@ import {
   Sparkles, SquareCheckBig, Target, Volume2, X, Zap,
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
+import { checkJoseSentence } from './utils/joseSentenceChecker.js'
 
 const icons = { Coffee, MessagesSquare, Sparkles, Brain }
 const modes = [
@@ -14,6 +15,7 @@ const modes = [
   { id: 'quiz', label: 'Two-way quiz', icon: Brain, description: 'Choose meanings and Spanish phrases in both directions.' },
   { id: 'builder', label: 'Sentence lab', icon: BookOpen, description: 'Build Spanish with your hands and feel the word order.' },
   { id: 'compose', label: 'Write it yourself', icon: MessageSquareText, description: 'Create the whole sentence from memory and get a useful check.', requires: 'compose' },
+  { id: 'create', label: 'Create 10 sentences', icon: Sparkles, description: 'Use the words freely and finish with ten sentences of your own.', requires: 'creation' },
   { id: 'vocab', label: 'Word focus', icon: Sparkles, description: 'Pull the important individual words out of the full phrases.', requires: 'vocabulary' },
   { id: 'scene', label: 'Real-life scene', icon: MessagesSquare, description: 'Choose what you would actually say in a real moment.', requires: 'scene' },
 ]
@@ -317,6 +319,7 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
       {mode === 'quiz' && <Quiz pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'builder' && <Builder pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'compose' && <Composer pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'create' && <SentenceCreationFinal pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'vocab' && <Vocabulary pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'scene' && <Scene pack={content} onAward={onAward} onFinish={onFinish} />}
     </div>
@@ -540,6 +543,54 @@ function Composer({ pack, onAward, onFinish }) {
     {!result || result.status !== 'correct'
       ? <button className="primary lesson-next" disabled={!value.trim()} onClick={check}>{pack.ui?.checkPhrase || 'Check sentence'} <Check size={18} /></button>
       : <button className="primary lesson-next" onClick={next}>{index === pack.compose.length - 1 ? (pack.ui?.finishLesson || 'Finish lesson') : (pack.ui?.nextPhrase || 'Next sentence')} <ArrowRight size={18} /></button>}
+  </ExerciseFrame>
+}
+
+function formatCreatedSentence(value) {
+  const clean = value.replace(/\s+/g, ' ').trim()
+  return /[.!?]$/.test(clean) ? clean : `${clean}.`
+}
+
+function SentenceCreationFinal({ pack, onAward, onFinish }) {
+  const [sentences, setSentences] = usePersistedState(`sg-created-sentences-${pack.id}`, [])
+  const [value, setValue] = useState('')
+  const [result, setResult] = useState(null)
+  const total = 10
+  const complete = sentences.length >= total
+
+  useEffect(() => setResult(null), [pack.activeLanguage])
+  const check = () => {
+    const evaluation = checkJoseSentence(value, sentences, pack.activeLanguage)
+    setResult(evaluation)
+    if (evaluation.correct && evaluation.counted) {
+      setSentences((old) => [...old, formatCreatedSentence(value)].slice(0, total))
+      setValue('')
+      onAward(15)
+    }
+  }
+  const reset = () => { setSentences([]); setValue(''); setResult(null) }
+  const removeSentence = (index) => setSentences((old) => old.filter((_, itemIndex) => itemIndex !== index))
+
+  if (complete) return <ExerciseFrame kicker={pack.ui?.creationCompleteKicker || 'YOUR 10 SENTENCES'} title={pack.ui?.creationCompleteTitle || 'You created all ten.'} current={total} total={total}>
+    <p className="creation-complete-copy">{pack.ui?.creationCompleteBody || 'These are your sentences — not a translated list and not a word-order puzzle.'}</p>
+    <ol className="creation-final-list">{sentences.slice(0, total).map((sentence, index) => <li key={`${sentence}-${index}`}><span>{index + 1}</span><b>{sentence}</b><button type="button" aria-label={`${pack.ui?.removeSentence || 'Remove sentence'} ${index + 1}`} onClick={() => removeSentence(index)}><X size={16} /></button></li>)}</ol>
+    <div className="creation-final-actions"><button type="button" className="back-button" onClick={reset}><RotateCcw size={17} /> {pack.ui?.newSet || 'Write a new set'}</button><button type="button" className="primary" onClick={onFinish}>{pack.ui?.finishAndSave || 'Finish and save'} <ArrowRight size={18} /></button></div>
+  </ExerciseFrame>
+
+  return <ExerciseFrame kicker={pack.ui?.creationKicker || 'CREATE SENTENCES'} title={pack.creation.title} current={sentences.length} total={total}>
+    <p className="creation-instruction">{pack.creation.instruction}</p>
+    <section className="creation-bank">
+      <div className="creation-bank-head"><b>{pack.ui?.wordBank || 'Words in front of you'}</b><span>{sentences.length} / {total}</span></div>
+      <div className="creation-word-grid">{pack.creation.bank.map((item) => <span key={item.word}><b>{item.word}</b><small>{item.meaning}</small></span>)}</div>
+      <div className="creation-form-strip"><b>{pack.ui?.usefulForms || 'Useful forms'}</b>{pack.creation.forms.map((form) => <span key={form}>{form}</span>)}</div>
+    </section>
+    <section className="creation-input-card">
+      <label htmlFor="free-sentence">{pack.ui?.sentenceNumber || 'Sentence'} {sentences.length + 1} / {total}</label>
+      <textarea id="free-sentence" value={value} placeholder={pack.ui?.freePlaceholder || 'Create any sentence with these words…'} autoCapitalize="sentences" spellCheck="false" onChange={(event) => { setValue(event.target.value); setResult(null) }} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && value.trim()) check() }} />
+      <button type="button" className="primary" disabled={!value.trim()} onClick={check}>{pack.ui?.checkMySentence || 'Check my sentence'} <Check size={18} /></button>
+    </section>
+    {result && <div className={`feedback creation-feedback ${result.correct && !result.duplicate ? 'positive' : result.duplicate ? 'close' : 'negative'}`}><b>{result.correct ? (result.duplicate ? (pack.ui?.correctDuplicate || 'Correct, but already counted') : (pack.ui?.createdCorrect || 'Correct — added to your list')) : (pack.ui?.createdWrong || 'This needs a change')}</b><p>{result.reason}</p></div>}
+    {sentences.length > 0 && <section className="creation-progress-list"><h3>{pack.ui?.yourCorrectSentences || 'Your correct sentences'} <span>{sentences.length}/{total}</span></h3><ol>{sentences.map((sentence, index) => <li key={`${sentence}-${index}`}><span>{index + 1}</span><b>{sentence}</b><button type="button" aria-label={`${pack.ui?.removeSentence || 'Remove sentence'} ${index + 1}`} onClick={() => removeSentence(index)}><X size={15} /></button></li>)}</ol></section>}
   </ExerciseFrame>
 }
 
