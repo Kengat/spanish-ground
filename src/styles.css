@@ -201,6 +201,10 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
 .ask-card-back:before{right:-58px;top:8px;width:222px;height:204px;opacity:.38;transform:rotate(11deg);background-image:radial-gradient(circle,#dc8b7d 0 1.2px,transparent 1.45px);background-size:10px 10px;-webkit-mask-image:radial-gradient(ellipse at 52% 46%,#000 0 18%,rgba(0,0,0,.84) 36%,rgba(0,0,0,.42) 58%,transparent 79%);mask-image:radial-gradient(ellipse at 52% 46%,#000 0 18%,rgba(0,0,0,.84) 36%,rgba(0,0,0,.42) 58%,transparent 79%)}
 .ask-card-back>span,.ask-card-back>h1,.ask-card-back>p,.ask-card-back>small{z-index:1}
 
+/* Persistent RU / EN switch for bilingual lesson content. */
+.pack-page-tools{display:flex;align-items:center;justify-content:space-between;gap:16px}.exercise-header-actions{display:flex;align-items:center;gap:9px}
+.lesson-language-toggle{height:36px;padding:3px;display:flex;align-items:center;border:1px solid #edd6cf;border-radius:999px;background:#fff8f5;box-shadow:0 5px 16px rgba(111,42,53,.055);-webkit-tap-highlight-color:transparent}.lesson-language-toggle button{width:40px;height:28px;padding:0;border:0;border-radius:999px;background:transparent;color:#9a737c;font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:.18s;-webkit-tap-highlight-color:transparent}.lesson-language-toggle button.active{background:linear-gradient(135deg,#a3274c,#781432);color:#fff;box-shadow:0 4px 10px rgba(125,20,53,.18)}.lesson-language-toggle.compact{height:32px}.lesson-language-toggle.compact button{width:34px;height:24px;font-size:9px}
+
 /* Guided free writing for the José sentence-building lesson. */
 .compose-card{max-width:660px;margin:0 auto;padding:25px;border:1px solid #f0ddd8;border-radius:25px;background:rgba(255,253,251,.96);box-shadow:0 16px 42px rgba(111,42,53,.065);text-align:left}
 .compose-card label{display:block;margin-bottom:10px;color:#9b2948;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
@@ -211,6 +215,7 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
 .compose-feedback{max-width:660px;margin:16px auto 0}.compose-feedback.close{background:#fff1db;border:1px solid #efcf9c}.compose-feedback.close b{color:#8a5b16}
 
 @media(max-width:560px){
+  .pack-page-tools{margin-top:2px}.pack-page-tools>.back-button{padding-left:0}.exercise-header-actions{gap:4px}.lesson-language-toggle.compact button{width:30px}.cards-exercise .ask-find-header{padding-left:13px;padding-right:13px}.cards-exercise .ask-find-header .exercise-title b{font-size:15px}.cards-exercise .ask-header-bookmark{width:30px}.cards-exercise .exercise-header-actions{gap:1px}
   .compose-card{padding:17px;border-radius:21px}.compose-card textarea{min-height:120px;padding:15px;font-size:19px}.compose-tools{align-items:flex-end}.compose-hint{font-size:12px;line-height:1.5}.compose-feedback{margin-top:13px}
 }
 

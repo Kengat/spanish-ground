@@ -20,6 +20,29 @@ const modes = [
 
 const initialProgress = { xp: 120, streak: 3, completed: [], modeCompletions: {}, mistakes: 4 }
 const FlagContext = createContext({ flaggedItems: [], toggleFlag: () => {} })
+const LessonLanguageContext = createContext({ language: 'ru', setLanguage: () => {} })
+
+function localizeLessonData(value, language) {
+  if (Array.isArray(value)) return value.map((item) => localizeLessonData(item, language))
+  if (!value || typeof value !== 'object') return value
+  const keys = Object.keys(value)
+  if (keys.length === 2 && keys.includes('ru') && keys.includes('en')) return localizeLessonData(value[language], language)
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, localizeLessonData(item, language)]))
+}
+
+function useLocalizedPack(pack) {
+  const { language } = useContext(LessonLanguageContext)
+  return useMemo(() => {
+    if (!pack?.bilingual) return pack
+    return { ...localizeLessonData(pack, language), activeLanguage: language }
+  }, [pack, language])
+}
+
+function LessonLanguageToggle({ pack, className = '' }) {
+  const { language, setLanguage } = useContext(LessonLanguageContext)
+  if (!pack?.bilingual) return null
+  return <div className={`lesson-language-toggle ${className}`} role="group" aria-label="Lesson explanation language"><button type="button" className={language === 'ru' ? 'active' : ''} aria-pressed={language === 'ru'} onClick={() => setLanguage('ru')}>RU</button><button type="button" className={language === 'en' ? 'active' : ''} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
+}
 
 function availableModesFor(pack) {
   return modes.filter((mode) => !mode.requires || pack[mode.requires])
@@ -83,6 +106,7 @@ function App() {
   const [customPacks, setCustomPacks] = usePersistedState('sg-custom-packs', [])
   const [progress, setProgress] = usePersistedState('sg-progress', initialProgress)
   const [flaggedItems, setFlaggedItems] = usePersistedState('sg-flagged-items', [])
+  const [lessonLanguage, setLessonLanguage] = usePersistedState('sg-lesson-language', 'ru')
   const [activePack, setActivePack] = useState(null)
   const [activeMode, setActiveMode] = useState(null)
   const [view, setView] = useState('today')
@@ -116,11 +140,12 @@ function App() {
     setActiveMode(null)
   }
 
-  if (activePack && activeMode) return <FlagContext.Provider value={{ flaggedItems, toggleFlag }}><Exercise pack={activePack} mode={activeMode} onBack={() => setActiveMode(null)} onAward={award} onFinish={finish} /></FlagContext.Provider>
-  if (reviewItems) return <FlagContext.Provider value={{ flaggedItems, toggleFlag }}><FlaggedTrainer items={reviewItems} onBack={() => setReviewItems(null)} onAward={award} /></FlagContext.Provider>
+  const withProviders = (children) => <LessonLanguageContext.Provider value={{ language: lessonLanguage, setLanguage: setLessonLanguage }}><FlagContext.Provider value={{ flaggedItems, toggleFlag }}>{children}</FlagContext.Provider></LessonLanguageContext.Provider>
 
-  return (
-    <FlagContext.Provider value={{ flaggedItems, toggleFlag }}>
+  if (activePack && activeMode) return withProviders(<Exercise pack={activePack} mode={activeMode} onBack={() => setActiveMode(null)} onAward={award} onFinish={finish} />)
+  if (reviewItems) return withProviders(<FlaggedTrainer items={reviewItems} onBack={() => setReviewItems(null)} onAward={award} />)
+
+  return withProviders(
     <div className={`app-shell view-${view}`} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <Sidebar view={view} onNavigate={navigate} flagCount={flaggedItems.length} />
       <main className="main-area">
@@ -140,7 +165,6 @@ function App() {
       </main>
       {showImport && <ImportModal onClose={() => setShowImport(false)} onSave={(pack) => { setCustomPacks((old) => [...old, pack]); setShowImport(false) }} />}
     </div>
-    </FlagContext.Provider>
   )
 }
 
@@ -176,6 +200,7 @@ function Topbar({ progress }) {
 
 function Dashboard({ packs, progress, onOpen, onImport, onReview, flagCount }) {
   const featured = packs.find((pack) => pack.featured) || packs.find((pack) => pack.id === 'everyday-60') || packs[0]
+  const featuredContent = useLocalizedPack(featured)
   const completedModeCount = Object.values(progress.modeCompletions || {}).reduce((total, packModes) => total + (Array.isArray(packModes) ? packModes.length : 0), 0)
   const totalModeCount = packs.reduce((total, pack) => total + availableModesFor(pack).length, 0)
   const overallProgress = totalModeCount ? Math.round((completedModeCount / totalModeCount) * 100) : 0
@@ -204,10 +229,10 @@ function Dashboard({ packs, progress, onOpen, onImport, onReview, flagCount }) {
       <section className="continue-card">
         <div className="continue-copy">
           <span className="eyebrow light">Essentials</span>
-          <h2>{featured.title}</h2>
-          <p>{featured.description}</p>
-          <div className="lesson-chip"><span>Phrase of the day</span><small>{featured.minutes} min</small></div>
-          <button className="primary light-button" aria-label={`Open ${featured.title}`} onClick={() => onOpen(featured)}><ArrowRight size={19} /></button>
+          <h2>{featuredContent.title}</h2>
+          <p>{featuredContent.description}</p>
+          <div className="lesson-chip"><span>{featuredContent.ui?.phraseOfDay || 'Phrase of the day'}</span><small>{featured.minutes} {featuredContent.ui?.minutesShort || 'min'}</small></div>
+          <button className="primary light-button" aria-label={`Open ${featuredContent.title}`} onClick={() => onOpen(featured)}><ArrowRight size={19} /></button>
         </div>
         <div className="lesson-art" aria-hidden="true" />
         <div className="continue-progress"><span style={{ width: '58%' }} /></div>
@@ -240,36 +265,38 @@ function recordModeCompletion(progress, pack, modeId) {
 }
 
 function PackCard({ pack, mastery, onClick }) {
+  const content = useLocalizedPack(pack)
   const Icon = icons[pack.icon] || BookOpen
   return (
     <button className={`pack-card ${pack.accent}`} onClick={onClick}>
       <div className="pack-icon"><Icon /></div>
-      <span className="eyebrow">{pack.eyebrow}</span>
-      <h3>{pack.title}</h3><p>{pack.description}</p>
-      <div className="pack-meta"><span>{pack.minutes} min</span><span>•</span><span>{pack.words.length} words</span>{mastery > 0 && <span className="completed">{mastery === 100 && <Check size={13} />}{mastery === 100 ? 'Done' : `${mastery}%`}</span>}<ArrowRight size={18} /></div>
+      <span className="eyebrow">{content.eyebrow}</span>
+      <h3>{content.title}</h3><p>{content.description}</p>
+      <div className="pack-meta"><span>{pack.minutes} {content.ui?.minutesShort || 'min'}</span><span>•</span><span>{pack.words.length} {content.ui?.wordsLabel || 'words'}</span>{mastery > 0 && <span className="completed">{mastery === 100 && <Check size={13} />}{mastery === 100 ? (content.ui?.done || 'Done') : `${mastery}%`}</span>}<ArrowRight size={18} /></div>
     </button>
   )
 }
 
 function PackOverview({ pack, progress, onBack, onStart }) {
+  const content = useLocalizedPack(pack)
   const Icon = icons[pack.icon] || BookOpen
   const availableModes = availableModesFor(pack)
   const completedModes = completedModesFor(progress, pack.id).filter((modeId) => availableModes.some((mode) => mode.id === modeId))
   const mastery = masteryFor(progress, pack)
   return (
     <div className="page pack-page">
-      <button className="back-button" onClick={onBack}><ArrowLeft size={17} /> Back to playground</button>
+      <div className="pack-page-tools"><button className="back-button" onClick={onBack}><ArrowLeft size={17} /> {content.ui?.backToPlayground || 'Back to playground'}</button><LessonLanguageToggle pack={pack} /></div>
       <section className={`pack-hero ${pack.accent}`}>
-        <div className="pack-hero-icon"><Icon /></div><div><span className="eyebrow">{pack.eyebrow}</span><h1>{pack.title}</h1><p>{pack.description}</p></div>
-        <div className="pack-score"><b>{mastery}%</b><span>mastery · {completedModes.length}/{availableModes.length} modes</span></div>
+        <div className="pack-hero-icon"><Icon /></div><div><span className="eyebrow">{content.eyebrow}</span><h1>{content.title}</h1><p>{content.description}</p></div>
+        <div className="pack-score"><b>{mastery}%</b><span>{content.ui?.mastery || 'mastery'} · {completedModes.length}/{availableModes.length} {content.ui?.modes || 'modes'}</span></div>
       </section>
-      <div className="section-heading"><div><span className="kicker">CHOOSE A MODE</span><h2>How do you want to practise?</h2></div></div>
+      <div className="section-heading"><div><span className="kicker">{content.ui?.chooseMode || 'CHOOSE A MODE'}</span><h2>{content.ui?.practiceQuestion || 'How do you want to practise?'}</h2></div></div>
       <section className="mode-grid">
-        {availableModes.map((mode, index) => { const IconMode = mode.icon; return (
+        {availableModes.map((mode, index) => { const IconMode = mode.icon; const copy = content.modeCopy?.[mode.id] || mode; return (
           <button key={mode.id} className="mode-card" onClick={() => onStart(mode.id)}>
-            <span className="mode-number">0{index + 1}</span><span className="mode-icon"><IconMode /></span><h3>{mode.label}</h3>
-            <p>{mode.description}</p>
-            <span className={`mode-start ${completedModes.includes(mode.id) ? 'mode-complete' : ''}`}>{completedModes.includes(mode.id) ? <><Check size={17} /> Completed</> : <>Start <ArrowRight size={17} /></>}</span>
+            <span className="mode-number">0{index + 1}</span><span className="mode-icon"><IconMode /></span><h3>{copy.label}</h3>
+            <p>{copy.description}</p>
+            <span className={`mode-start ${completedModes.includes(mode.id) ? 'mode-complete' : ''}`}>{completedModes.includes(mode.id) ? <><Check size={17} /> {content.ui?.completed || 'Completed'}</> : <>{content.ui?.start || 'Start'} <ArrowRight size={17} /></>}</span>
           </button>
         )})}
       </section>
@@ -278,18 +305,20 @@ function PackOverview({ pack, progress, onBack, onStart }) {
 }
 
 function Exercise({ pack, mode, onBack, onAward, onFinish }) {
+  const content = useLocalizedPack(pack)
   const cardMode = mode === 'cards'
+  const modeCopy = content.modeCopy?.[mode] || modes.find((item) => item.id === mode)
   return (
     <div className={`exercise-shell ${cardMode ? 'cards-exercise' : ''}`}>
-      <header className={`exercise-header ${cardMode ? 'ask-find-header' : ''}`}><button className="back-button" aria-label={cardMode ? 'Back' : 'Exit'} onClick={onBack}>{cardMode ? <ArrowLeft size={20} /> : <><X size={20} /> Exit</>}</button><div className="exercise-title">{!cardMode && <span>{pack.eyebrow}</span>}<b>{cardMode ? 'Ask & Find' : modes.find((m) => m.id === mode)?.label}</b></div>{cardMode ? <button className="ask-header-bookmark" aria-label="Saved phrases"><Bookmark size={20} /></button> : <div className="xp-chip"><Sparkles size={16} /> +10 XP</div>}</header>
-      {mode === 'cards' && <Cards pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'guide' && <GrammarGuide pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'match' && <Match pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'quiz' && <Quiz pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'builder' && <Builder pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'compose' && <Composer pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'vocab' && <Vocabulary pack={pack} onAward={onAward} onFinish={onFinish} />}
-      {mode === 'scene' && <Scene pack={pack} onAward={onAward} onFinish={onFinish} />}
+      <header className={`exercise-header ${cardMode ? 'ask-find-header' : ''}`}><button className="back-button" aria-label={cardMode ? (content.ui?.back || 'Back') : (content.ui?.exit || 'Exit')} onClick={onBack}>{cardMode ? <ArrowLeft size={20} /> : <><X size={20} /> {content.ui?.exit || 'Exit'}</>}</button><div className="exercise-title">{!cardMode && <span>{content.eyebrow}</span>}<b>{cardMode ? (content.ui?.cardTitle || 'Ask & Find') : modeCopy?.label}</b></div><div className="exercise-header-actions"><LessonLanguageToggle pack={pack} className="compact" />{cardMode ? <button className="ask-header-bookmark" aria-label={content.ui?.savedPhrases || 'Saved phrases'}><Bookmark size={20} /></button> : <div className="xp-chip"><Sparkles size={16} /> +10 XP</div>}</div></header>
+      {mode === 'cards' && <Cards pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'guide' && <GrammarGuide pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'match' && <Match pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'quiz' && <Quiz pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'builder' && <Builder pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'compose' && <Composer pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'vocab' && <Vocabulary pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'scene' && <Scene pack={content} onAward={onAward} onFinish={onFinish} />}
     </div>
   )
 }
@@ -311,8 +340,8 @@ function GrammarGuide({ pack, onAward, onFinish }) {
       <div className="guide-examples">{page.examples.map(([spanish, note]) => <div key={spanish}><b>{spanish}</b><span>{note}</span><FlagButton pack={pack} item={{ es: spanish, en: note }} /></div>)}</div>
     </div>
     <div className="guide-actions">
-      <button className="back-button" disabled={index === 0} onClick={() => setIndex(index - 1)}><ArrowLeft size={17} /> Previous</button>
-      <button className="primary" onClick={next}>{index === pack.guide.length - 1 ? 'Start practising' : 'I understand'} <ArrowRight size={18} /></button>
+      <button className="back-button" disabled={index === 0} onClick={() => setIndex(index - 1)}><ArrowLeft size={17} /> {pack.ui?.previous || 'Previous'}</button>
+      <button className="primary" onClick={next}>{index === pack.guide.length - 1 ? (pack.ui?.startPractising || 'Start practising') : (pack.ui?.understand || 'I understand')} <ArrowRight size={18} /></button>
     </div>
   </ExerciseFrame>
 }
@@ -331,22 +360,22 @@ function speakSpanish(text) {
 
 function Cards({ pack, onAward, onFinish }) {
   const [index, setIndex] = useState(0); const [flipped, setFlipped] = useState(false)
-  const items = useMemo(() => shuffle(pack.words), [pack])
-  const word = items[index]
+  const order = useMemo(() => shuffle(pack.words.map((word) => word.es)), [pack.id])
+  const word = pack.words.find((item) => item.es === order[index])
   const next = () => { onAward(); if (index === pack.words.length - 1) onFinish(); else { setIndex(index + 1); setFlipped(false) } }
   const toggleCard = () => setFlipped((old) => !old)
-  const progress = ((index + 1) / items.length) * 4
+  const progress = ((index + 1) / order.length) * 4
   return <main className="ask-find-main">
-    <div className="ask-progress-row"><div className="ask-progress-segments">{[0, 1, 2, 3].map((segment) => <i key={segment}><span style={{ width: `${Math.max(0, Math.min(100, (progress - segment) * 100))}%` }} /></i>)}</div><b>{index + 1} / {items.length}</b></div>
-    <div className="ask-language">Spanish <ArrowRight size={14} /> English</div>
+    <div className="ask-progress-row"><div className="ask-progress-segments">{[0, 1, 2, 3].map((segment) => <i key={segment}><span style={{ width: `${Math.max(0, Math.min(100, (progress - segment) * 100))}%` }} /></i>)}</div><b>{index + 1} / {order.length}</b></div>
+    <div className="ask-language">{pack.ui?.spanish || 'Spanish'} <ArrowRight size={14} /> {pack.ui?.targetLanguage || 'English'}</div>
     <section className={`ask-phrase-card ${flipped ? 'flipped' : ''}`} role="button" tabIndex={0} onClick={toggleCard} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') toggleCard() }}>
       <div className="ask-card-inner">
-        <div className="ask-card-face ask-card-front"><h1>{word.es}</h1><button className="ask-audio" aria-label="Play Spanish pronunciation" onClick={(event) => { event.stopPropagation(); speakSpanish(word.es) }}><SpeakerIcon /></button><BookmarkButton pack={pack} item={word} className="ask-card-bookmark" /></div>
-        <div className="ask-card-face ask-card-back"><span>ENGLISH MEANING</span><h1>{word.en}</h1>{word.example && <p>“{word.example}”</p>}<small>Tap to see Spanish</small></div>
+        <div className="ask-card-face ask-card-front"><h1>{word.es}</h1><button className="ask-audio" aria-label={pack.ui?.playPronunciation || 'Play Spanish pronunciation'} onClick={(event) => { event.stopPropagation(); speakSpanish(word.es) }}><SpeakerIcon /></button><BookmarkButton pack={pack} item={word} className="ask-card-bookmark" /></div>
+        <div className="ask-card-face ask-card-back"><span>{pack.ui?.meaningLabel || 'ENGLISH MEANING'}</span><h1>{word.en}</h1>{word.example && <p>“{word.example}”</p>}<small>{pack.ui?.tapToSpanish || 'Tap to see Spanish'}</small></div>
       </div>
     </section>
-    <section className="listen-prompt"><div><Sparkles size={20} /><b>Listen and remember the phrase</b></div><p>Tap the speaker to hear how it’s pronounced. Then say it out loud!</p></section>
-    <button className="primary ask-got" disabled={!flipped} onClick={next}>{index === pack.words.length - 1 ? 'Finish' : 'Got it'} <ArrowRight size={18} /></button>
+    <section className="listen-prompt"><div><Sparkles size={20} /><b>{pack.ui?.listenTitle || 'Listen and remember the phrase'}</b></div><p>{pack.ui?.listenBody || 'Tap the speaker to hear how it’s pronounced. Then say it out loud!'}</p></section>
+    <button className="primary ask-got" disabled={!flipped} onClick={next}>{index === pack.words.length - 1 ? (pack.ui?.finish || 'Finish') : (pack.ui?.gotIt || 'Got it')} <ArrowRight size={18} /></button>
   </main>
 }
 
@@ -368,23 +397,26 @@ function generatedQuiz(words) {
 }
 
 function Match({ pack, onAward, onFinish }) {
-  const items = useMemo(() => shuffle(pack.words), [pack])
+  const order = useMemo(() => shuffle(pack.words.map((word) => word.es)), [pack.id])
+  const items = order.map((es) => pack.words.find((word) => word.es === es))
   const [round, setRound] = useState(0)
   const [leftPick, setLeftPick] = useState(null)
   const [rightPick, setRightPick] = useState(null)
   const [matched, setMatched] = useState([])
   const [message, setMessage] = useState('')
   const batch = items.slice(round * 4, round * 4 + 4)
-  const meanings = useMemo(() => shuffle(batch), [round, items])
+  const meaningOrder = useMemo(() => shuffle(order.slice(round * 4, round * 4 + 4)), [round, pack.id])
+  const meanings = meaningOrder.map((es) => pack.words.find((word) => word.es === es))
   const totalRounds = Math.ceil(items.length / 4)
+  useEffect(() => { setLeftPick(null); setRightPick(null); setMessage('') }, [pack.activeLanguage])
 
   const assess = (left, right) => {
     if (!left || !right) return
     if (left.es === right.es) {
       setMatched((old) => [...old, left.es])
-      setMessage('¡Sí! That pair belongs together.')
+      setMessage(pack.ui?.matchCorrect || '¡Sí! That pair belongs together.')
       onAward(3)
-    } else setMessage('Not this pair — try the other meaning.')
+    } else setMessage(pack.ui?.matchWrong || 'Not this pair — try the other meaning.')
     setLeftPick(null)
     setRightPick(null)
   }
@@ -395,13 +427,13 @@ function Match({ pack, onAward, onFinish }) {
     else { setRound(round + 1); setMatched([]); setMessage(''); setLeftPick(null); setRightPick(null) }
   }
 
-  return <ExerciseFrame kicker="4 × 4 MATCH" title={`Connect the pairs · Round ${round + 1} of ${totalRounds}`} current={round * 4 + matched.length} total={items.length}>
+  return <ExerciseFrame kicker={pack.ui?.matchKicker || '4 × 4 MATCH'} title={`${pack.ui?.connectPairs || 'Connect the pairs'} · ${pack.ui?.round || 'Round'} ${round + 1} ${pack.ui?.of || 'of'} ${totalRounds}`} current={round * 4 + matched.length} total={items.length}>
     <div className="match-board">
       <div>{batch.map((item) => <div className="match-item" key={item.es}><button disabled={matched.includes(item.es)} className={leftPick?.es === item.es ? 'selected' : ''} onClick={() => pickLeft(item)}>{item.es}</button><FlagButton pack={pack} item={item} /></div>)}</div>
       <div>{meanings.map((item) => <button key={item.es} disabled={matched.includes(item.es)} className={rightPick?.es === item.es ? 'selected' : ''} onClick={() => pickRight(item)}>{item.en}</button>)}</div>
     </div>
-    <div className={`match-message ${message.startsWith('¡') ? 'good' : ''}`}>{message || `${matched.length} of ${batch.length} matched`}</div>
-    <button className="primary lesson-next" disabled={matched.length !== batch.length} onClick={nextRound}>{round === totalRounds - 1 ? 'Finish matching' : 'Next four'} <ArrowRight size={18} /></button>
+    <div className={`match-message ${message.startsWith('¡') ? 'good' : ''}`}>{message || `${matched.length} ${pack.ui?.of || 'of'} ${batch.length} ${pack.ui?.matched || 'matched'}`}</div>
+    <button className="primary lesson-next" disabled={matched.length !== batch.length} onClick={nextRound}>{round === totalRounds - 1 ? (pack.ui?.finishMatching || 'Finish matching') : (pack.ui?.nextFour || 'Next four')} <ArrowRight size={18} /></button>
   </ExerciseFrame>
 }
 
@@ -409,13 +441,14 @@ function Quiz({ pack, onAward, onFinish }) {
   const [index, setIndex] = useState(0); const [picked, setPicked] = useState(null)
   const items = useMemo(() => pack.generatedQuiz ? generatedQuiz(pack.words) : pack.quiz, [pack])
   const item = items[index]; const correct = picked === item.answer
+  useEffect(() => setPicked(null), [pack.activeLanguage])
   const flagItem = quizFlagItem(pack, item)
   const next = () => { if (correct) onAward(); if (index === items.length - 1) onFinish(); else { setIndex(index + 1); setPicked(null) } }
-  return <ExerciseFrame kicker="TWO-WAY QUIZ" title={item.prompt} current={index + 1} total={items.length}>
-    <div className="exercise-flag"><FlagButton pack={pack} item={flagItem} /><span>Hard one?</span></div>
+  return <ExerciseFrame kicker={pack.ui?.quizKicker || 'TWO-WAY QUIZ'} title={item.prompt} current={index + 1} total={items.length}>
+    <div className="exercise-flag"><FlagButton pack={pack} item={flagItem} /><span>{pack.ui?.hardOne || 'Hard one?'}</span></div>
     <div className="options">{item.options.map((option, i) => <button key={option} className={`${picked ? (option === item.answer ? 'right' : option === picked ? 'wrong' : '') : ''}`} onClick={() => setPicked(option)}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>
-    {picked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? '¡Muy bien!' : 'Not quite yet.'}</b><p>{item.explanation || (correct ? 'That is the natural answer.' : `The answer is “${item.answer}”. Say it once out loud.`)}</p></div>}
-    <button className="primary lesson-next" disabled={!picked} onClick={next}>{index === items.length - 1 ? 'Finish' : 'Next'} <ArrowRight size={18} /></button>
+    {picked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? (pack.ui?.correctTitle || '¡Muy bien!') : (pack.ui?.wrongTitle || 'Not quite yet.')}</b><p>{item.explanation || (correct ? (pack.ui?.naturalAnswer || 'That is the natural answer.') : `${pack.ui?.answerIs || 'The answer is'} “${item.answer}”. ${pack.ui?.sayIt || 'Say it once out loud.'}`)}</p></div>}
+    <button className="primary lesson-next" disabled={!picked} onClick={next}>{index === items.length - 1 ? (pack.ui?.finish || 'Finish') : (pack.ui?.next || 'Next')} <ArrowRight size={18} /></button>
   </ExerciseFrame>
 }
 
@@ -427,13 +460,13 @@ function Builder({ pack, onAward, onFinish }) {
   const shuffled = useMemo(() => shuffle(prepared.tokens), [prepared])
   const correct = chosen.join(' ') === prepared.tokens.join(' ')
   const next = () => { if (correct) onAward(); if (index === items.length - 1) onFinish(); else { setIndex(index + 1); setChosen([]); setChecked(false) } }
-  return <ExerciseFrame kicker="SENTENCE LAB" title={item.translation} current={index + 1} total={items.length}>
-    <div className="exercise-flag"><FlagButton pack={pack} item={{ es: prepared.canonical, en: item.translation }} /><span>Hard one?</span></div>
+  return <ExerciseFrame kicker={pack.ui?.sentenceKicker || 'SENTENCE LAB'} title={item.translation} current={index + 1} total={items.length}>
+    <div className="exercise-flag"><FlagButton pack={pack} item={{ es: prepared.canonical, en: item.translation }} /><span>{pack.ui?.hardOne || 'Hard one?'}</span></div>
     <div className="sentence-pattern" aria-label="Sentence punctuation pattern">{prepared.pattern}</div>
-    <div className={`sentence-drop ${checked ? correct ? 'right' : 'wrong' : ''}`}>{chosen.length ? chosen.map((word, i) => <button key={`${word}-${i}`} onClick={() => !checked && setChosen(chosen.filter((_, n) => n !== i))}>{word}</button>) : <span>Build the sentence here…</span>}</div>
+    <div className={`sentence-drop ${checked ? correct ? 'right' : 'wrong' : ''}`}>{chosen.length ? chosen.map((word, i) => <button key={`${word}-${i}`} onClick={() => !checked && setChosen(chosen.filter((_, n) => n !== i))}>{word}</button>) : <span>{pack.ui?.buildPlaceholder || 'Build the sentence here…'}</span>}</div>
     <div className="word-bank">{shuffled.map((word, i) => { const used = chosen.filter((x) => x === word).length >= shuffled.slice(0, i + 1).filter((x) => x === word).length; return <button key={`${word}-${i}`} disabled={used || checked} onClick={() => setChosen([...chosen, word])}>{word}</button> })}</div>
-    {checked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? '¡Perfecto!' : 'Almost—look at the word order.'}</b><p>{prepared.canonical}</p></div>}
-    {!checked ? <button className="primary lesson-next" disabled={!chosen.length} onClick={() => setChecked(true)}>Check sentence <Check size={18} /></button> : <button className="primary lesson-next" onClick={next}>{index === items.length - 1 ? 'Finish' : 'Next'} <ArrowRight size={18} /></button>}
+    {checked && <div className={`feedback ${correct ? 'positive' : 'negative'}`}><b>{correct ? (pack.ui?.perfect || '¡Perfecto!') : (pack.ui?.wordOrder || 'Almost—look at the word order.')}</b><p>{prepared.canonical}</p></div>}
+    {!checked ? <button className="primary lesson-next" disabled={!chosen.length} onClick={() => setChecked(true)}>{pack.ui?.checkSentence || 'Check sentence'} <Check size={18} /></button> : <button className="primary lesson-next" onClick={next}>{index === items.length - 1 ? (pack.ui?.finish || 'Finish') : (pack.ui?.next || 'Next')} <ArrowRight size={18} /></button>}
   </ExerciseFrame>
 }
 
@@ -465,18 +498,18 @@ function normalizeWrittenSpanish(value, ignoreAccents = false) {
   return ignoreAccents ? normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : normalized
 }
 
-function checkWrittenAnswer(value, item) {
+function checkWrittenAnswer(value, item, ui = {}) {
   const exact = normalizeWrittenSpanish(value)
   const accepted = item.accepted.map((answer) => normalizeWrittenSpanish(answer))
-  if (accepted.includes(exact)) return { status: 'correct', title: '¡Muy bien!', message: item.explanation }
+  if (accepted.includes(exact)) return { status: 'correct', title: ui.correctTitle || '¡Muy bien!', message: item.explanation }
 
   const loose = normalizeWrittenSpanish(value, true)
   const acceptedLoose = item.accepted.map((answer) => normalizeWrittenSpanish(answer, true))
-  if (acceptedLoose.includes(loose)) return { status: 'close', title: 'Смысл верный — поправь ударение.', message: `Напиши так: ${item.answer}` }
-  if (/\btrabajar\b/i.test(value)) return { status: 'wrong', title: 'Нужна форма глагола.', message: 'Для «я работаю» используй trabajo, а trabajar означает «работать».' }
-  if (/\bvolver\b/i.test(value)) return { status: 'wrong', title: 'Инфинитив нужно изменить.', message: 'Для «я возвращаюсь» используй vuelvo, а не volver.' }
-  if (/\bno\s+(tiempo|aquí|allí|ahora)\b/i.test(value)) return { status: 'wrong', title: 'Поставь no перед глаголом.', message: `Один естественный вариант: ${item.answer}` }
-  return { status: 'wrong', title: 'Пока не сходится.', message: `Сравни с рабочим вариантом: ${item.answer}` }
+  if (acceptedLoose.includes(loose)) return { status: 'close', title: ui.accentTitle || 'Meaning is right — fix the accent.', message: `${ui.writeIt || 'Write it like this:'} ${item.answer}` }
+  if (/\btrabajar\b/i.test(value)) return { status: 'wrong', title: ui.verbFormTitle || 'Use a conjugated verb.', message: ui.workFormMessage || 'For “I work”, use trabajo; trabajar means “to work”.' }
+  if (/\bvolver\b/i.test(value)) return { status: 'wrong', title: ui.infinitiveTitle || 'Change the infinitive.', message: ui.returnFormMessage || 'For “I return”, use vuelvo, not volver.' }
+  if (/\bno\s+(tiempo|aquí|allí|ahora)\b/i.test(value)) return { status: 'wrong', title: ui.noPositionTitle || 'Put no before the verb.', message: `${ui.naturalVariant || 'One natural version:'} ${item.answer}` }
+  return { status: 'wrong', title: ui.notYetTitle || 'Not quite yet.', message: `${ui.compareVariant || 'Compare it with this version:'} ${item.answer}` }
 }
 
 function Composer({ pack, onAward, onFinish }) {
@@ -485,27 +518,28 @@ function Composer({ pack, onAward, onFinish }) {
   const [result, setResult] = useState(null)
   const [hint, setHint] = useState(false)
   const item = pack.compose[index]
-  const check = () => setResult(checkWrittenAnswer(value, item))
+  useEffect(() => setResult(null), [pack.activeLanguage])
+  const check = () => setResult(checkWrittenAnswer(value, item, pack.ui))
   const next = () => {
     if (result?.status === 'correct') onAward(12)
     if (index === pack.compose.length - 1) onFinish()
     else { setIndex(index + 1); setValue(''); setResult(null); setHint(false) }
   }
 
-  return <ExerciseFrame kicker="CREATE SENTENCES · NO WORD BANK" title={item.prompt} current={index + 1} total={pack.compose.length}>
+  return <ExerciseFrame kicker={pack.ui?.composerKicker || 'CREATE SENTENCES · NO WORD BANK'} title={item.prompt} current={index + 1} total={pack.compose.length}>
     <div className="compose-card">
-      <label htmlFor="sentence-answer">Твоя фраза</label>
-      <textarea id="sentence-answer" value={value} disabled={result?.status === 'correct'} placeholder="Escribe en español…" autoCapitalize="sentences" spellCheck="false" onChange={(event) => { setValue(event.target.value); setResult(null) }} />
+      <label htmlFor="sentence-answer">{pack.ui?.yourPhrase || 'Your sentence'}</label>
+      <textarea id="sentence-answer" value={value} disabled={result?.status === 'correct'} placeholder={pack.ui?.composePlaceholder || 'Write in Spanish…'} autoCapitalize="sentences" spellCheck="false" onChange={(event) => { setValue(event.target.value); setResult(null) }} />
       <div className="compose-tools">
-        <button type="button" className="compose-hint-button" onClick={() => setHint((old) => !old)}><Sparkles size={16} /> {hint ? 'Скрыть опору' : 'Нужна опора?'}</button>
-        <span>{value.trim().split(/\s+/).filter(Boolean).length} words</span>
+        <button type="button" className="compose-hint-button" onClick={() => setHint((old) => !old)}><Sparkles size={16} /> {hint ? (pack.ui?.hideHint || 'Hide hint') : (pack.ui?.showHint || 'Need a hint?')}</button>
+        <span>{value.trim().split(/\s+/).filter(Boolean).length} {pack.ui?.words || 'words'}</span>
       </div>
       {hint && <div className="compose-hint">{item.hint}</div>}
     </div>
     {result && <div className={`feedback compose-feedback ${result.status === 'correct' ? 'positive' : 'negative'} ${result.status}`}><b>{result.title}</b><p>{result.message}</p></div>}
     {!result || result.status !== 'correct'
-      ? <button className="primary lesson-next" disabled={!value.trim()} onClick={check}>Проверить фразу <Check size={18} /></button>
-      : <button className="primary lesson-next" onClick={next}>{index === pack.compose.length - 1 ? 'Завершить урок' : 'Следующая фраза'} <ArrowRight size={18} /></button>}
+      ? <button className="primary lesson-next" disabled={!value.trim()} onClick={check}>{pack.ui?.checkPhrase || 'Check sentence'} <Check size={18} /></button>
+      : <button className="primary lesson-next" onClick={next}>{index === pack.compose.length - 1 ? (pack.ui?.finishLesson || 'Finish lesson') : (pack.ui?.nextPhrase || 'Next sentence')} <ArrowRight size={18} /></button>}
   </ExerciseFrame>
 }
 
