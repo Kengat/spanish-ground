@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
 import { checkJoseSentence } from './utils/joseSentenceChecker.js'
+import { checkCoreVerbsSentence } from './utils/coreVerbsSentenceChecker.js'
 
 const icons = { Coffee, MessagesSquare, Sparkles, Brain }
 const modes = [
@@ -15,9 +16,9 @@ const modes = [
   { id: 'quiz', label: 'Two-way quiz', icon: Brain, description: 'Choose meanings and Spanish phrases in both directions.' },
   { id: 'builder', label: 'Sentence lab', icon: BookOpen, description: 'Build Spanish with your hands and feel the word order.' },
   { id: 'compose', label: 'Write it yourself', icon: MessageSquareText, description: 'Create the whole sentence from memory and get a useful check.', requires: 'compose' },
-  { id: 'create', label: 'Create 10 sentences', icon: Sparkles, description: 'Use the words freely and finish with ten sentences of your own.', requires: 'creation' },
   { id: 'vocab', label: 'Word focus', icon: Sparkles, description: 'Pull the important individual words out of the full phrases.', requires: 'vocabulary' },
   { id: 'scene', label: 'Real-life scene', icon: MessagesSquare, description: 'Choose what you would actually say in a real moment.', requires: 'scene' },
+  { id: 'create', label: 'Create your own sentences', icon: Sparkles, description: 'Use the words freely and finish with sentences of your own.', requires: 'creation' },
 ]
 
 const initialProgress = { xp: 120, streak: 3, completed: [], modeCompletions: {}, mistakes: 4 }
@@ -555,12 +556,13 @@ function SentenceCreationFinal({ pack, onAward, onFinish }) {
   const [sentences, setSentences] = usePersistedState(`sg-created-sentences-${pack.id}`, [])
   const [value, setValue] = useState('')
   const [result, setResult] = useState(null)
-  const total = 10
+  const total = pack.creation.total || 10
   const complete = sentences.length >= total
 
   useEffect(() => setResult(null), [pack.activeLanguage])
   const check = () => {
-    const evaluation = checkJoseSentence(value, sentences, pack.activeLanguage)
+    const checker = pack.creation.checker === 'core-verbs' ? checkCoreVerbsSentence : checkJoseSentence
+    const evaluation = checker(value, sentences, pack.activeLanguage)
     setResult(evaluation)
     if (evaluation.correct && evaluation.counted) {
       setSentences((old) => [...old, formatCreatedSentence(value)].slice(0, total))
@@ -571,7 +573,7 @@ function SentenceCreationFinal({ pack, onAward, onFinish }) {
   const reset = () => { setSentences([]); setValue(''); setResult(null) }
   const removeSentence = (index) => setSentences((old) => old.filter((_, itemIndex) => itemIndex !== index))
 
-  if (complete) return <ExerciseFrame kicker={pack.ui?.creationCompleteKicker || 'YOUR 10 SENTENCES'} title={pack.ui?.creationCompleteTitle || 'You created all ten.'} current={total} total={total}>
+  if (complete) return <ExerciseFrame kicker={pack.ui?.creationCompleteKicker || `YOUR ${total} SENTENCES`} title={pack.ui?.creationCompleteTitle || `You created all ${total}.`} current={total} total={total}>
     <p className="creation-complete-copy">{pack.ui?.creationCompleteBody || 'These are your sentences — not a translated list and not a word-order puzzle.'}</p>
     <ol className="creation-final-list">{sentences.slice(0, total).map((sentence, index) => <li key={`${sentence}-${index}`}><span>{index + 1}</span><b>{sentence}</b><button type="button" aria-label={`${pack.ui?.removeSentence || 'Remove sentence'} ${index + 1}`} onClick={() => removeSentence(index)}><X size={16} /></button></li>)}</ol>
     <div className="creation-final-actions"><button type="button" className="back-button" onClick={reset}><RotateCcw size={17} /> {pack.ui?.newSet || 'Write a new set'}</button><button type="button" className="primary" onClick={onFinish}>{pack.ui?.finishAndSave || 'Finish and save'} <ArrowRight size={18} /></button></div>

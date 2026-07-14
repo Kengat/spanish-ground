@@ -3,7 +3,6 @@ const l = (ru, en) => ({ ru, en })
 export const joseSentenceLesson = {
   id: 'jose-sentence-foundations',
   bilingual: true,
-  featured: true,
   title: l('Строй свои первые фразы', 'Build your first Spanish sentences'),
   eyebrow: l('Урок с Хосе · A0', 'Lesson with José · A0'),
   description: l('Преврати sí, no, aquí, ahora и повседневные глаголы во фразы, которые ты создаёшь сам.', 'Turn sí, no, aquí, ahora and everyday verbs into sentences you can create yourself.'),
