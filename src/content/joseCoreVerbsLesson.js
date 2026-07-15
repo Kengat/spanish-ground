@@ -3,7 +3,6 @@ const l = (ru, en) => ({ ru, en })
 export const joseCoreVerbsLesson = {
   id: 'jose-core-verbs-yo-tu',
   bilingual: true,
-  featured: true,
   title: l('Yo, tú и шесть главных глаголов', 'Yo, tú and six essential verbs'),
   eyebrow: l('Второй урок с Хосе · A0', 'Second lesson with José · A0'),
   description: l('Научись менять tener, querer, poder, hacer, ir и venir для «я» и «ты» — и сразу используй их в своих фразах.', 'Change tener, querer, poder, hacer, ir and venir for “I” and “you”, then use them in sentences of your own.'),

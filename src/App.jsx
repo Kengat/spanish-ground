@@ -7,6 +7,7 @@ import {
 import { starterPacks } from './content/lessonPacks.js'
 import { checkJoseSentence } from './utils/joseSentenceChecker.js'
 import { checkCoreVerbsSentence } from './utils/coreVerbsSentenceChecker.js'
+import { checkPositionHouseSentence } from './utils/positionHouseSentenceChecker.js'
 
 const icons = { Coffee, MessagesSquare, Sparkles, Brain }
 const modes = [
@@ -561,7 +562,11 @@ function SentenceCreationFinal({ pack, onAward, onFinish }) {
 
   useEffect(() => setResult(null), [pack.activeLanguage])
   const check = () => {
-    const checker = pack.creation.checker === 'core-verbs' ? checkCoreVerbsSentence : checkJoseSentence
+    const checker = pack.creation.checker === 'core-verbs'
+      ? checkCoreVerbsSentence
+      : pack.creation.checker === 'house-positions'
+        ? checkPositionHouseSentence
+        : checkJoseSentence
     const evaluation = checker(value, sentences, pack.activeLanguage)
     setResult(evaluation)
     if (evaluation.correct && evaluation.counted) {
@@ -591,7 +596,7 @@ function SentenceCreationFinal({ pack, onAward, onFinish }) {
       <textarea id="free-sentence" value={value} placeholder={pack.ui?.freePlaceholder || 'Create any sentence with these words…'} autoCapitalize="sentences" spellCheck="false" onChange={(event) => { setValue(event.target.value); setResult(null) }} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && value.trim()) check() }} />
       <button type="button" className="primary" disabled={!value.trim()} onClick={check}>{pack.ui?.checkMySentence || 'Check my sentence'} <Check size={18} /></button>
     </section>
-    {result && <div className={`feedback creation-feedback ${result.correct && !result.duplicate ? 'positive' : result.duplicate ? 'close' : 'negative'}`}><b>{result.correct ? (result.duplicate ? (pack.ui?.correctDuplicate || 'Correct, but already counted') : (pack.ui?.createdCorrect || 'Correct — added to your list')) : (pack.ui?.createdWrong || 'This needs a change')}</b><p>{result.reason}</p></div>}
+    {result && <div className={`feedback creation-feedback ${result.correct ? result.counted ? 'positive' : 'close' : 'negative'}`}><b>{result.correct ? (result.counted ? (pack.ui?.createdCorrect || 'Correct — added to your list') : (pack.ui?.correctNotCounted || pack.ui?.correctDuplicate || 'Correct, but not counted yet')) : (pack.ui?.createdWrong || 'This needs a change')}</b><p>{result.reason}</p></div>}
     {sentences.length > 0 && <section className="creation-progress-list"><h3>{pack.ui?.yourCorrectSentences || 'Your correct sentences'} <span>{sentences.length}/{total}</span></h3><ol>{sentences.map((sentence, index) => <li key={`${sentence}-${index}`}><span>{index + 1}</span><b>{sentence}</b><button type="button" aria-label={`${pack.ui?.removeSentence || 'Remove sentence'} ${index + 1}`} onClick={() => removeSentence(index)}><X size={15} /></button></li>)}</ol></section>}
   </ExerciseFrame>
 }
