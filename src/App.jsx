@@ -8,6 +8,7 @@ import { starterPacks } from './content/lessonPacks.js'
 import { checkJoseSentence } from './utils/joseSentenceChecker.js'
 import { checkCoreVerbsSentence } from './utils/coreVerbsSentenceChecker.js'
 import { checkPositionHouseSentence } from './utils/positionHouseSentenceChecker.js'
+import { checkLearningChangesSentence } from './utils/learningChangesSentenceChecker.js'
 
 const icons = { Coffee, MessagesSquare, Sparkles, Brain }
 const modes = [
@@ -342,6 +343,7 @@ function GrammarGuide({ pack, onAward, onFinish }) {
     <div className="grammar-guide">
       <p className="guide-body">{page.body}</p>
       <div className="guide-rule">{page.rule}</div>
+      {page.conjugation && <ConjugationMap data={page.conjugation} />}
       <div className="guide-examples">{page.examples.map(([spanish, note]) => <div key={spanish}><b>{spanish}</b><span>{note}</span><FlagButton pack={pack} item={{ es: spanish, en: note }} /></div>)}</div>
     </div>
     <div className="guide-actions">
@@ -349,6 +351,16 @@ function GrammarGuide({ pack, onAward, onFinish }) {
       <button className="primary" onClick={next}>{index === pack.guide.length - 1 ? (pack.ui?.startPractising || 'Start practising') : (pack.ui?.understand || 'I understand')} <ArrowRight size={18} /></button>
     </div>
   </ExerciseFrame>
+}
+
+function ConjugationMap({ data }) {
+  return <section className="conjugation-map" aria-label={data.title}>
+    <h3>{data.title}</h3>
+    <div className="ending-family-grid">{data.endings.map((family) => <article className={`ending-family ${family.tone}`} key={family.group}><header><b>{family.group}</b><span>{family.rule}</span></header><div>{family.forms.map(([person, ending]) => <span key={person}><small>{person}</small><b>{ending}</b></span>)}</div></article>)}</div>
+    <h3>{data.examplesTitle}</h3>
+    <div className="conjugation-example-grid">{data.examples.map((example) => <article className={example.tone} key={example.verb}><header><b>{example.verb}</b><span>{example.group}</span></header><div>{example.forms.map(([person, form]) => <p key={person}><span>{person}</span><b>{form}</b></p>)}</div></article>)}</div>
+    <p className="conjugation-reminder">💡 {data.reminder}</p>
+  </section>
 }
 
 function speakSpanish(text) {
@@ -566,7 +578,9 @@ function SentenceCreationFinal({ pack, onAward, onFinish }) {
       ? checkCoreVerbsSentence
       : pack.creation.checker === 'house-positions'
         ? checkPositionHouseSentence
-        : checkJoseSentence
+        : pack.creation.checker === 'learning-changes'
+          ? checkLearningChangesSentence
+          : checkJoseSentence
     const evaluation = checker(value, sentences, pack.activeLanguage)
     setResult(evaluation)
     if (evaluation.correct && evaluation.counted) {

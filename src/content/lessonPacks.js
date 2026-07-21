@@ -3,9 +3,11 @@ import { serEstarPack } from './serEstar.js'
 import { joseSentenceLesson } from './joseSentenceLesson.js'
 import { joseCoreVerbsLesson } from './joseCoreVerbsLesson.js'
 import { joseActionsPositionsLesson } from './joseActionsPositionsLesson.js'
+import { joseLearningChangesLesson } from './joseLearningChangesLesson.js'
 
 // Add future material here. The exercise engine reads the same shape for every pack.
 export const starterPacks = [
+  joseLearningChangesLesson,
   joseActionsPositionsLesson,
   joseCoreVerbsLesson,
   joseSentenceLesson,

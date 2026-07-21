@@ -3,7 +3,6 @@ const l = (ru, en) => ({ ru, en })
 export const joseActionsPositionsLesson = {
   id: 'jose-actions-time-positions',
   bilingual: true,
-  featured: true,
   title: l('Действия, причины и пространство', 'Actions, reasons and space'),
   eyebrow: l('Третий урок с Хосе · A0–A1', 'Third lesson with José · A0–A1'),
   description: l('Ищи и находи, объясняй причины, говори о времени и точно описывай расположение предметов дома.', 'Search and find, explain reasons, talk about time and describe exactly where objects are at home.'),
