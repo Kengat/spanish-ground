@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import {
   ArrowLeft, ArrowRight, Bookmark, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
   Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Settings,
-  Sparkles, SquareCheckBig, Target, Volume2, X, Zap,
+  Music2, Sparkles, SquareCheckBig, Target, Volume2, X, Zap,
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
 import { checkJoseSentence } from './utils/joseSentenceChecker.js'
@@ -10,8 +10,9 @@ import { checkCoreVerbsSentence } from './utils/coreVerbsSentenceChecker.js'
 import { checkPositionHouseSentence } from './utils/positionHouseSentenceChecker.js'
 import { checkLearningChangesSentence } from './utils/learningChangesSentenceChecker.js'
 
-const icons = { Coffee, MessagesSquare, Sparkles, Brain }
+const icons = { Coffee, MessagesSquare, Sparkles, Brain, Music2 }
 const modes = [
+  { id: 'song', label: 'Interactive song', icon: Music2, description: 'Watch, follow the synced lyrics and explore every word.', requires: 'song' },
   { id: 'guide', label: 'Clear guide', icon: BookOpen, description: 'Understand the idea first — without grammar fog.', requires: 'guide' },
   { id: 'cards', label: 'Two-way deck', icon: Zap, description: 'Flip through every item in alternating directions.' },
   { id: 'match', label: '4×4 Match', icon: Target, description: 'Connect four Spanish phrases with four meanings, round after round.' },
@@ -317,6 +318,7 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
     <div className={`exercise-shell ${cardMode ? 'cards-exercise' : ''}`}>
       <header className={`exercise-header ${cardMode ? 'ask-find-header' : ''}`}><button className="back-button" aria-label={cardMode ? (content.ui?.back || 'Back') : (content.ui?.exit || 'Exit')} onClick={onBack}>{cardMode ? <ArrowLeft size={20} /> : <><X size={20} /> {content.ui?.exit || 'Exit'}</>}</button><div className="exercise-title">{!cardMode && <span>{content.eyebrow}</span>}<b>{cardMode ? (content.ui?.cardTitle || 'Ask & Find') : modeCopy?.label}</b></div><div className="exercise-header-actions"><LessonLanguageToggle pack={pack} className="compact" />{cardMode ? <button className="ask-header-bookmark" aria-label={content.ui?.savedPhrases || 'Saved phrases'}><Bookmark size={20} /></button> : <div className="xp-chip"><Sparkles size={16} /> +10 XP</div>}</div></header>
       {mode === 'cards' && <Cards pack={content} onAward={onAward} onFinish={onFinish} />}
+      {mode === 'song' && <SongStudio pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'guide' && <GrammarGuide pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'match' && <Match pack={content} onAward={onAward} onFinish={onFinish} />}
       {mode === 'quiz' && <Quiz pack={content} onAward={onAward} onFinish={onFinish} />}
@@ -327,6 +329,127 @@ function Exercise({ pack, mode, onBack, onAward, onFinish }) {
       {mode === 'scene' && <Scene pack={content} onAward={onAward} onFinish={onFinish} />}
     </div>
   )
+}
+
+let youtubeApiPromise
+function loadYouTubeApi() {
+  if (globalThis.YT?.Player) return Promise.resolve(globalThis.YT)
+  if (youtubeApiPromise) return youtubeApiPromise
+  youtubeApiPromise = new Promise((resolve) => {
+    const previousReady = globalThis.onYouTubeIframeAPIReady
+    globalThis.onYouTubeIframeAPIReady = () => {
+      previousReady?.()
+      resolve(globalThis.YT)
+    }
+    if (!document.querySelector('script[data-spanish-ground-youtube]')) {
+      const script = document.createElement('script')
+      script.src = 'https://www.youtube.com/iframe_api'
+      script.dataset.spanishGroundYoutube = 'true'
+      document.head.appendChild(script)
+    }
+  })
+  return youtubeApiPromise
+}
+
+function songTokenKey(token) {
+  return token.toLocaleLowerCase('es').replace(/^[^a-záéíóúüñ]+|[^a-záéíóúüñ]+$/g, '')
+}
+
+function SongWord({ token, selected, onSelect }) {
+  const key = songTokenKey(token)
+  return <button type="button" className={`song-word ${selected ? 'selected' : ''}`} onMouseEnter={() => onSelect(key)} onFocus={() => onSelect(key)} onKeyDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onSelect(key) }}>{token}</button>
+}
+
+function SongStudio({ pack, onAward, onFinish }) {
+  const { song } = pack
+  const hostRef = useRef(null)
+  const playerRef = useRef(null)
+  const transcriptRef = useRef(null)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const [selectedLine, setSelectedLine] = useState(0)
+  const [selectedWord, setSelectedWord] = useState(songTokenKey(song.lines[0].text.split(/\s+/)[0]))
+
+  const activeIndex = useMemo(() => {
+    const found = song.lines.findLastIndex((line) => currentTime >= line.start)
+    return Math.max(0, found)
+  }, [currentTime, song.lines])
+  const focusIndex = playing ? activeIndex : selectedLine
+  const focusLine = song.lines[focusIndex]
+  const wordEntry = song.lexicon[selectedWord] || song.fallbackWord
+
+  useEffect(() => {
+    let cancelled = false
+    let timer
+    loadYouTubeApi().then((YT) => {
+      if (cancelled || !hostRef.current) return
+      playerRef.current = new YT.Player(hostRef.current, {
+        videoId: song.videoId,
+        width: '100%',
+        height: '100%',
+        playerVars: { rel: 0, playsinline: 1, origin: globalThis.location?.origin },
+        events: {
+          onReady: () => { timer = globalThis.setInterval(() => { const time = playerRef.current?.getCurrentTime?.(); if (Number.isFinite(time)) setCurrentTime(time) }, 220) },
+          onStateChange: (event) => setPlaying(event.data === YT.PlayerState.PLAYING),
+        },
+      })
+    })
+    return () => {
+      cancelled = true
+      if (timer) globalThis.clearInterval(timer)
+      playerRef.current?.destroy?.()
+      playerRef.current = null
+    }
+  }, [song.videoId])
+
+  useEffect(() => {
+    if (!playing) return
+    setSelectedLine(activeIndex)
+    transcriptRef.current?.querySelector(`[data-line-index="${activeIndex}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [activeIndex, playing])
+
+  useEffect(() => {
+    setSelectedWord(songTokenKey(focusLine.text.split(/\s+/)[0]))
+  }, [focusIndex, focusLine.text])
+
+  const seekToLine = (index) => {
+    setSelectedLine(index)
+    setCurrentTime(song.lines[index].start)
+    playerRef.current?.seekTo?.(song.lines[index].start, true)
+  }
+  const renderWords = (line, prefix) => line.text.split(/\s+/).map((token, index) => {
+    const key = songTokenKey(token)
+    return <SongWord key={`${prefix}-${index}-${token}`} token={token} selected={key === selectedWord} onSelect={setSelectedWord} />
+  })
+
+  return <main className="song-main">
+    <ProgressBar current={activeIndex + 1} total={song.lines.length} />
+    <section className="song-heading"><span className="kicker">{song.kicker}</span><h1>{song.title}</h1><p>{song.instructions}</p></section>
+    <div className="song-layout">
+      <section className="song-player-column">
+        <div className="song-video"><div ref={hostRef} /></div>
+        <article className="song-now-card">
+          <div><span>{song.nowLabel}</span><time>{Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}</time></div>
+          <p className="song-current-words">{renderWords(focusLine, `current-${focusIndex}`)}</p>
+          <p className="song-current-translation">{focusLine.translation}</p>
+          <small>{focusLine.explanation}</small>
+        </article>
+        <article className="song-word-explainer" aria-live="polite">
+          <span>{song.wordLabel}</span><h2>{selectedWord || '—'}</h2><b>{wordEntry.meaning}</b><p>{wordEntry.note}</p>
+        </article>
+      </section>
+      <section className="song-transcript-panel">
+        <header><div><span>{song.transcriptLabel}</span><b>{song.lines.length} {song.linesLabel}</b></div><small>{song.transcriptHint}</small></header>
+        <div className="song-transcript" ref={transcriptRef}>
+          {song.lines.map((line, index) => <div role="button" tabIndex={0} data-line-index={index} className={`song-line ${index === activeIndex ? 'active' : ''} ${index === selectedLine ? 'selected' : ''}`} key={`${line.start}-${line.text}`} onClick={() => seekToLine(index)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') seekToLine(index) }}>
+            <time>{Math.floor(line.start / 60)}:{String(Math.floor(line.start % 60)).padStart(2, '0')}</time><p>{renderWords(line, `line-${index}`)}</p><small>{line.translation}</small>
+          </div>)}
+        </div>
+      </section>
+    </div>
+    <section className="song-study-note"><Music2 /><div><b>{song.studyTitle}</b><p>{song.studyNote}</p></div></section>
+    <button className="primary lesson-next song-finish" onClick={() => { onAward(25); onFinish() }}>{song.finishLabel} <ArrowRight size={18} /></button>
+  </main>
 }
 
 function ProgressBar({ current, total }) { return <div className="lesson-progress"><span style={{ width: `${(current / total) * 100}%` }} /></div> }

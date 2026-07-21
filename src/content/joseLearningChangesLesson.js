@@ -5,7 +5,6 @@ const people = ['yo', 'tú', 'él / ella', 'nosotros', 'vosotros', 'ellos / ella
 export const joseLearningChangesLesson = {
   id: 'jose-learning-changes-communication',
   bilingual: true,
-  featured: true,
   title: l('Учиться, меняться и говорить', 'Learn, change and communicate'),
   eyebrow: l('Четвёртый урок с Хосе · A0–A1', 'Fourth lesson with José · A0–A1'),
   description: l('Освой настоящее время, говори об учёбе, переменах, людях и ежедневных действиях — затем напиши пять собственных фраз.', 'Master the present tense, talk about learning, change, people and daily actions, then write five sentences of your own.'),

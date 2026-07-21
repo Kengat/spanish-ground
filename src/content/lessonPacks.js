@@ -4,9 +4,11 @@ import { joseSentenceLesson } from './joseSentenceLesson.js'
 import { joseCoreVerbsLesson } from './joseCoreVerbsLesson.js'
 import { joseActionsPositionsLesson } from './joseActionsPositionsLesson.js'
 import { joseLearningChangesLesson } from './joseLearningChangesLesson.js'
+import { hareLoQuePuedaSongLesson } from './hareLoQuePuedaSongLesson.js'
 
 // Add future material here. The exercise engine reads the same shape for every pack.
 export const starterPacks = [
+  hareLoQuePuedaSongLesson,
   joseLearningChangesLesson,
   joseActionsPositionsLesson,
   joseCoreVerbsLesson,
