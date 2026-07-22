@@ -191,7 +191,7 @@ const cards = [
 ].map(([es, ru, en, example]) => ({ es, en: l(ru, en), example }))
 
 export const hareLoQuePuedaSongLesson = {
-  id: 'hare-lo-que-pueda-song', bilingual: true, featured: true,
+  id: 'hare-lo-que-pueda-song', bilingual: true,
   title: 'Haré lo que pueda',
   eyebrow: l('Песня · Puño Dragón · A1', 'Song · Puño Dragón · A1'),
   description: l('Смотри клип с синхронным текстом, разбирай каждое слово и превращай морские метафоры песни в живой испанский.', 'Watch the video with synced lyrics, explore every word and turn the song’s sea metaphors into usable Spanish.'),
