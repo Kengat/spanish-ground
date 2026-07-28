@@ -2,9 +2,10 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import {
   ArrowLeft, ArrowRight, Bookmark, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
   Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Settings,
-  Music2, Sparkles, SquareCheckBig, Target, Volume2, X, Zap,
+  Maximize2, Music2, Sparkles, SquareCheckBig, Table2, Target, Volume2, X, Zap,
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
+import { grammarTablesContent } from './content/grammarTables.js'
 import { checkJoseSentence } from './utils/joseSentenceChecker.js'
 import { checkCoreVerbsSentence } from './utils/coreVerbsSentenceChecker.js'
 import { checkPositionHouseSentence } from './utils/positionHouseSentenceChecker.js'
@@ -156,7 +157,7 @@ function App() {
       <Sidebar view={view} onNavigate={navigate} flagCount={flaggedItems.length} />
       <main className="main-area">
         <Topbar progress={progress} />
-        {view === 'review' ? <ReviewPage packs={packs} flaggedItems={flaggedItems} onBack={() => navigate('today')} onTrain={setReviewItems} /> : !activePack ? (
+        {view === 'review' ? <ReviewPage packs={packs} flaggedItems={flaggedItems} onBack={() => navigate('today')} onTrain={setReviewItems} /> : view === 'tables' ? <GrammarTablesPage /> : !activePack ? (
           <Dashboard
             packs={packs}
             progress={progress}
@@ -181,6 +182,7 @@ function Sidebar({ view, onNavigate, flagCount }) {
       <nav>
         <button className={`nav-item ${view === 'today' ? 'active' : ''}`} onClick={() => onNavigate('today')}><Home size={20} /> Home</button>
         <button className="nav-item"><MessageSquareText size={20} /> Lessons</button>
+        <button className={`nav-item ${view === 'tables' ? 'active' : ''}`} onClick={() => onNavigate('tables')}><Table2 size={20} /> Tables</button>
         <button className={`nav-item ${view === 'review' ? 'active' : ''}`} onClick={() => onNavigate('review')}><SquareCheckBig size={20} /> Review {flagCount > 0 && <span className="nav-count">{flagCount}</span>}</button>
         <button className="nav-item"><CircleUserRound size={20} /> Profile</button>
       </nav>
@@ -201,6 +203,217 @@ function Topbar({ progress }) {
       <div className="stat-pill"><Sparkles size={18} /><b>{progress.xp}</b><span>XP</span></div>
       <button className="round-button"><CircleUserRound /></button>
     </header>
+  )
+}
+
+function GrammarTablesPage() {
+  const content = useLocalizedPack(grammarTablesContent)
+  const [activeId, setActiveId] = useState(content.tables[0].id)
+  const [expandedId, setExpandedId] = useState(null)
+  const activeTable = content.tables.find((table) => table.id === activeId) || content.tables[0]
+  const expandedTable = content.tables.find((table) => table.id === expandedId)
+
+  useEffect(() => {
+    if (!expandedId) return undefined
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setExpandedId(null) }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [expandedId])
+
+  return (
+    <div className="grammar-tables-page">
+      <header className="grammar-tables-hero">
+        <div>
+          <span className="grammar-tables-kicker">SPANISH REFERENCE · A0–A1</span>
+          <h1>{content.title}</h1>
+          <p>{content.subtitle}</p>
+        </div>
+        <LessonLanguageToggle pack={grammarTablesContent} className="grammar-tables-language" />
+      </header>
+
+      <div className="tables-desktop-heading">
+        <span>{content.desktopHint}</span>
+        <div className="table-topic-dots" aria-hidden="true">{content.tables.map((table) => <i key={table.id} />)}</div>
+      </div>
+
+      <div className="tables-desktop-overview">
+        {content.tables.map((table) => (
+          <article className={`grammar-overview-card table-${table.type}`} key={table.id}>
+            <ReferenceTableHeader table={table} />
+            <ReferenceTable table={table} compact />
+            <button type="button" className="table-expand-button" onClick={() => setExpandedId(table.id)}>
+              <Maximize2 size={15} /> {content.expand}
+            </button>
+          </article>
+        ))}
+      </div>
+
+      <div className="tables-mobile-view">
+        <p className="tables-mobile-hint">{content.mobileHint}</p>
+        <div className="table-topic-switcher" role="tablist" aria-label={content.title}>
+          {content.tables.map((table) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeId === table.id}
+              className={activeId === table.id ? 'active' : ''}
+              key={table.id}
+              onClick={() => setActiveId(table.id)}
+            >
+              <span>{table.number}</span>{table.shortTitle}
+            </button>
+          ))}
+        </div>
+        <article className={`grammar-mobile-card table-${activeTable.type}`}>
+          <ReferenceTableHeader table={activeTable} />
+          <ReferenceTable table={activeTable} />
+        </article>
+      </div>
+
+      {expandedTable && (
+        <div className="grammar-table-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedId(null) }}>
+          <section className={`grammar-table-modal table-${expandedTable.type}`} role="dialog" aria-modal="true" aria-label={expandedTable.title}>
+            <button type="button" className="grammar-table-close" aria-label={content.close} onClick={() => setExpandedId(null)}><X size={21} /></button>
+            <ReferenceTableHeader table={expandedTable} />
+            <ReferenceTable table={expandedTable} />
+          </section>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ReferenceTableHeader({ table }) {
+  return (
+    <header className="reference-table-header">
+      <span className="reference-table-number">{table.number}</span>
+      <div>
+        <h2>{table.title}</h2>
+        <p>{table.subtitle}</p>
+      </div>
+    </header>
+  )
+}
+
+function ReferenceTable({ table, compact = false }) {
+  return (
+    <div className={`reference-table-content ${compact ? 'is-compact' : ''}`}>
+      {table.type === 'ser-estar' && <SerEstarReference table={table} />}
+      {table.type === 'gerund' && <GerundReference table={table} />}
+      {table.type === 'demonstratives' && <DemonstrativesReference table={table} />}
+      {table.type === 'regular-present' && <RegularPresentReference table={table} />}
+      <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
+    </div>
+  )
+}
+
+function SerEstarReference({ table }) {
+  return (
+    <>
+      <div className="ser-estar-grid">
+        {table.verbs.map((verb) => (
+          <section className={`verb-reference-panel tone-${verb.tone}`} key={verb.name}>
+            <h3>{verb.name}</h3>
+            <div className="conjugation-grid">
+              <div className="conjugation-head" />
+              {table.tenses.map((tense) => <div className="conjugation-head" key={tense}>{tense}</div>)}
+              {table.people.map((person, index) => (
+                <div className="conjugation-row" key={person}>
+                  <b>{person}</b>
+                  {verb.rows[index].map((form) => <span key={form}>{form}</span>)}
+                </div>
+              ))}
+            </div>
+            <div className="verb-usage">
+              <b>{verb.useTitle}</b>
+              <span>{verb.uses}</span>
+              <div>{verb.examples.map(([es, meaning]) => <p key={es}><strong>{es}</strong><small>{meaning}</small></p>)}</div>
+            </div>
+          </section>
+        ))}
+      </div>
+    </>
+  )
+}
+
+function GerundReference({ table }) {
+  return (
+    <>
+      <div className="gerund-formula"><span>⏱</span><b>{table.formula}</b></div>
+      <div className="gerund-groups">
+        {table.groups.map((group) => (
+          <section className={`gerund-group tone-${group.tone}`} key={group.ending}>
+            <h3>{group.ending}</h3>
+            <p>{group.rule}</p>
+            <div>{group.examples.map(([base, gerund]) => <span key={base}><b>{base}</b><i>→</i><strong>{gerund}</strong></span>)}</div>
+          </section>
+        ))}
+      </div>
+      <section className="gerund-stems">
+        <b>{table.stemTitle}</b>
+        <div>{table.stemExamples.map(([base, gerund]) => <span key={base}>{base} <i>→</i> <strong>{gerund}</strong></span>)}</div>
+      </section>
+      <div className="gerund-bottom">
+        <section>
+          <h4>AHORA</h4>
+          {table.progressExamples.map(([es, meaning]) => <p key={es}><strong>{es}</strong><span>{meaning}</span></p>)}
+        </section>
+        <section className="gerund-compare">
+          <h4>COMPARA</h4>
+          {table.compare.map(([es, meaning]) => <p key={es}><strong>{es}</strong><span>{meaning}</span></p>)}
+        </section>
+      </div>
+    </>
+  )
+}
+
+function DemonstrativesReference({ table }) {
+  return (
+    <>
+      <div className="demonstrative-grid">
+        {table.columns.map((column) => (
+          <section className={`demonstrative-panel tone-${column.tone}`} key={column.name}>
+            <h3>{column.name}</h3>
+            <b>{column.heading}</b>
+            <p>{column.rule}</p>
+            <ul>{column.examples.map((example) => <li key={example}>{example}</li>)}</ul>
+          </section>
+        ))}
+      </div>
+      <div className="demonstrative-notes">
+        <p><b>2×</b>{table.plural}</p>
+        <p><b>´</b>{table.accent}</p>
+        <p><b>!</b>{table.wrong}</p>
+      </div>
+    </>
+  )
+}
+
+function RegularPresentReference({ table }) {
+  return (
+    <>
+      <div className="regular-endings">
+        <div className="regular-person-column">
+          <b>PERSONA</b>
+          {table.people.map((person) => <span key={person}>{person}</span>)}
+        </div>
+        {table.families.map((family) => (
+          <section className={`regular-family tone-${family.tone}`} key={family.family}>
+            <h3>{family.family}</h3>
+            {family.endings.map((ending, index) => <span key={`${family.family}-${ending}-${index}`}>{ending}</span>)}
+          </section>
+        ))}
+      </div>
+      <div className="regular-examples">
+        {table.families.map((family) => (
+          <section className={`regular-example tone-${family.tone}`} key={family.infinitive}>
+            <h3>{family.infinitive} <small>({family.family})</small></h3>
+            {table.people.map((person, index) => <p key={person}><span>{person}</span><strong>{family.forms[index]}</strong></p>)}
+          </section>
+        ))}
+      </div>
+      <div className="regular-notes"><p>{table.spain}</p><p>{table.note}</p></div>
+    </>
   )
 }
 

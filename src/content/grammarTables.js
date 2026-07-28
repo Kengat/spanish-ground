@@ -1,0 +1,205 @@
+const l = (ru, en) => ({ ru, en })
+
+const people = [
+  'yo',
+  'tú',
+  'él / ella / usted',
+  'nosotros',
+  'vosotros',
+  'ellos / ellas / ustedes',
+]
+
+export const grammarTablesContent = {
+  bilingual: true,
+  title: l('Грамматические таблицы', 'Grammar tables'),
+  subtitle: l(
+    'Четыре опорные схемы: коротко, точно и с формами, которые используются в Испании.',
+    'Four essential references: concise, accurate and complete with the forms used in Spain.',
+  ),
+  desktopHint: l('Нажми на любую таблицу, чтобы развернуть её на весь экран.', 'Select any table to open it full screen.'),
+  mobileHint: l('Выбери тему — на экране будет только одна таблица.', 'Choose a topic — only one table is shown at a time.'),
+  expand: l('Развернуть', 'Open full screen'),
+  close: l('Закрыть таблицу', 'Close table'),
+  memoryLabel: l('Запомни', 'Remember'),
+  tables: [
+    {
+      id: 'ser-estar',
+      number: '01',
+      type: 'ser-estar',
+      shortTitle: 'SER / ESTAR',
+      title: l('SER и ESTAR', 'SER and ESTAR'),
+      subtitle: l('Прошедшее, настоящее и будущее', 'Past, present and future'),
+      memory: l(
+        'SER отвечает «кто/что это?», ESTAR — «где и в каком состоянии?». Это надёжнее правила «навсегда / временно».',
+        'SER answers “what is it?”, ESTAR answers “where/how is it?”. This is more reliable than “permanent / temporary”.',
+      ),
+      tenses: [
+        l('Прошедшее', 'Past'),
+        l('Настоящее', 'Present'),
+        l('Будущее', 'Future'),
+      ],
+      verbs: [
+        {
+          name: 'SER',
+          tone: 'blue',
+          rows: [
+            ['fui', 'soy', 'seré'],
+            ['fuiste', 'eres', 'serás'],
+            ['fue', 'es', 'será'],
+            ['fuimos', 'somos', 'seremos'],
+            ['fuisteis', 'sois', 'seréis'],
+            ['fueron', 'son', 'serán'],
+          ],
+          useTitle: l('SER: сущность и идентичность', 'SER: identity and essence'),
+          uses: l('личность · происхождение · профессия · время и дата · характеристика', 'identity · origin · profession · time and date · characteristic'),
+          examples: [
+            ['Soy estudiante.', l('Я студент.', 'I am a student.')],
+            ['Somos de Ucrania.', l('Мы из Украины.', 'We are from Ukraine.')],
+          ],
+        },
+        {
+          name: 'ESTAR',
+          tone: 'green',
+          rows: [
+            ['estuve', 'estoy', 'estaré'],
+            ['estuviste', 'estás', 'estarás'],
+            ['estuvo', 'está', 'estará'],
+            ['estuvimos', 'estamos', 'estaremos'],
+            ['estuvisteis', 'estáis', 'estaréis'],
+            ['estuvieron', 'están', 'estarán'],
+          ],
+          useTitle: l('ESTAR: место и состояние', 'ESTAR: location and state'),
+          uses: l('местоположение · состояние · эмоция · результат действия', 'location · state · emotion · result of an action'),
+          examples: [
+            ['Estoy cansado.', l('Я устал.', 'I am tired.')],
+            ['Estaremos en casa.', l('Мы будем дома.', 'We will be at home.')],
+          ],
+        },
+      ],
+      people,
+    },
+    {
+      id: 'gerund',
+      number: '02',
+      type: 'gerund',
+      shortTitle: l('Герундий', 'Gerund'),
+      title: l('Герундий: действие сейчас', 'The gerund: action in progress'),
+      subtitle: 'ESTAR + GERUNDIO',
+      memory: l(
+        'Сначала измени смысловой глагол, затем поставь перед ним нужную форму ESTAR: estoy estudiando, está leyendo.',
+        'Change the action verb, then put the right form of ESTAR before it: estoy estudiando, está leyendo.',
+      ),
+      formula: l('ESTAR + герундий = действие, которое происходит сейчас', 'ESTAR + gerund = an action happening right now'),
+      groups: [
+        {
+          ending: '-AR → -ANDO',
+          tone: 'green',
+          rule: l('Убери -ar и добавь -ando', 'Remove -ar and add -ando'),
+          examples: [['hablar', 'hablando'], ['trabajar', 'trabajando'], ['caminar', 'caminando'], ['estudiar', 'estudiando']],
+        },
+        {
+          ending: '-ER / -IR → -IENDO',
+          tone: 'blue',
+          rule: l('Убери -er / -ir и добавь -iendo', 'Remove -er / -ir and add -iendo'),
+          examples: [['comer', 'comiendo'], ['vivir', 'viviendo'], ['escribir', 'escribiendo']],
+        },
+        {
+          ending: l('После гласной → -YENDO', 'After a vowel → -YENDO'),
+          tone: 'purple',
+          rule: l('В некоторых формах i превращается в y', 'In some forms, i changes to y'),
+          examples: [['leer', 'leyendo'], ['creer', 'creyendo'], ['traer', 'trayendo'], ['caer', 'cayendo'], ['oír', 'oyendo'], ['ir', 'yendo']],
+        },
+      ],
+      stemTitle: l('Изменение корня в некоторых -IR', 'Stem changes in some -IR verbs'),
+      stemExamples: [['dormir', 'durmiendo'], ['pedir', 'pidiendo'], ['decir', 'diciendo'], ['venir', 'viniendo'], ['poder', 'pudiendo']],
+      progressExamples: [
+        ['Estoy estudiando español.', l('Я сейчас учу испанский.', 'I am studying Spanish right now.')],
+        ['Estáis comiendo.', l('Вы сейчас едите.', 'You are eating right now.')],
+        ['Está lloviendo.', l('Сейчас идёт дождь.', 'It is raining.')],
+      ],
+      compare: [
+        ['Estudio español.', l('Обычно / вообще изучаю испанский.', 'I study Spanish in general.')],
+        ['Estoy estudiando español.', l('Занимаюсь этим прямо сейчас.', 'I am studying Spanish right now.')],
+      ],
+    },
+    {
+      id: 'demonstratives',
+      number: '03',
+      type: 'demonstratives',
+      shortTitle: 'ESTE / ESTA / ESTO',
+      title: 'ESTE, ESTA Y ESTO',
+      subtitle: l('Три способа сказать «этот / эта / это»', 'Three ways to say “this”'),
+      memory: l(
+        'Назвал предмет — согласуй este/esta с родом. Не назвал предмет или говоришь об идее — используй esto.',
+        'If you name the noun, match este/esta to its gender. If the noun is unnamed or it is an idea, use esto.',
+      ),
+      columns: [
+        {
+          name: 'ESTE',
+          tone: 'green',
+          heading: l('мужской род + существительное', 'masculine noun'),
+          rule: l('Ставится перед существительным мужского рода.', 'Use before a masculine noun.'),
+          examples: ['este libro', 'este ordenador', 'este profesor', 'este autobús'],
+        },
+        {
+          name: 'ESTA',
+          tone: 'blue',
+          heading: l('женский род + существительное', 'feminine noun'),
+          rule: l('Ставится перед существительным женского рода.', 'Use before a feminine noun.'),
+          examples: ['esta mesa', 'esta silla', 'esta universidad', 'esta casa'],
+        },
+        {
+          name: 'ESTO',
+          tone: 'purple',
+          heading: l('предмет или идея без названия', 'an unnamed thing or idea'),
+          rule: l('Это местоимение: после него не ставят существительное.', 'This is a pronoun: a noun does not follow it.'),
+          examples: ['¿Qué es esto?', 'Esto es importante.', 'No entiendo esto.', 'Me gusta esto.'],
+        },
+      ],
+      plural: l('Во множественном числе: estos libros · estas mesas. У esto нет формы множественного числа.', 'Plural: estos libros · estas mesas. Esto has no plural form.'),
+      accent: l('Не путай: esta mesa — «этот стол», но está aquí — «находится здесь». У формы глагола está есть ударение.', 'Do not confuse: esta mesa means “this table”, but está aquí means “is here”. The verb form está has an accent.'),
+      wrong: l('Не говори: esto libro ✕. Правильно: este libro ✓.', 'Do not say: esto libro ✕. Say: este libro ✓.'),
+    },
+    {
+      id: 'regular-present',
+      number: '04',
+      type: 'regular-present',
+      shortTitle: l('Настоящее время', 'Present tense'),
+      title: l('Правильные глаголы в настоящем', 'Regular verbs in the present'),
+      subtitle: '-AR · -ER · -IR',
+      memory: l(
+        'Убери -ar, -er или -ir, сохрани корень и добавь окончание для нужного лица.',
+        'Remove -ar, -er or -ir, keep the stem and add the ending for the right person.',
+      ),
+      people,
+      families: [
+        {
+          infinitive: 'TRABAJAR',
+          family: '-AR',
+          tone: 'blue',
+          endings: ['-o', '-as', '-a', '-amos', '-áis', '-an'],
+          forms: ['trabajo', 'trabajas', 'trabaja', 'trabajamos', 'trabajáis', 'trabajan'],
+        },
+        {
+          infinitive: 'APRENDER',
+          family: '-ER',
+          tone: 'green',
+          endings: ['-o', '-es', '-e', '-emos', '-éis', '-en'],
+          forms: ['aprendo', 'aprendes', 'aprende', 'aprendemos', 'aprendéis', 'aprenden'],
+        },
+        {
+          infinitive: 'ABRIR',
+          family: '-IR',
+          tone: 'purple',
+          endings: ['-o', '-es', '-e', '-imos', '-ís', '-en'],
+          forms: ['abro', 'abres', 'abre', 'abrimos', 'abrís', 'abren'],
+        },
+      ],
+      note: l(
+        'Эта схема только для правильных глаголов. У неправильных глаголов и глаголов с изменением корня могут быть другие формы.',
+        'This pattern is for regular verbs. Irregular and stem-changing verbs may use different forms.',
+      ),
+      spain: l('В Испании для неформального «вы» используется vosotros: trabajáis, aprendéis, abrís.', 'In Spain, informal plural “you” uses vosotros: trabajáis, aprendéis, abrís.'),
+    },
+  ],
+}
