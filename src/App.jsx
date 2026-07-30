@@ -301,7 +301,7 @@ function ReferenceTable({ table, compact = false }) {
       {table.type === 'ser-estar' && <SerEstarReference table={table} />}
       {table.type === 'gerund' && <GerundReference table={table} />}
       {table.type === 'demonstratives' && <DemonstrativesReference table={table} />}
-      {table.type === 'regular-present' && <RegularPresentReference table={table} />}
+      {(table.type === 'regular-present' || table.type === 'regular-past') && <RegularVerbReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
@@ -389,7 +389,7 @@ function DemonstrativesReference({ table }) {
   )
 }
 
-function RegularPresentReference({ table }) {
+function RegularVerbReference({ table }) {
   return (
     <>
       <div className="regular-endings">
@@ -412,7 +412,11 @@ function RegularPresentReference({ table }) {
           </section>
         ))}
       </div>
-      <div className="regular-notes"><p>{table.spain}</p><p>{table.note}</p></div>
+      <div className="regular-notes">
+        <p>{table.spain}</p>
+        {table.contrast && <p>{table.contrast}</p>}
+        <p>{table.note}</p>
+      </div>
     </>
   )
 }
