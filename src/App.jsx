@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft, ArrowRight, Bookmark, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
-  Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Settings,
+  BookOpenText, Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Search, Settings,
   Maximize2, Music2, Sparkles, SquareCheckBig, Table2, Target, Volume2, X, Zap,
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
 import { grammarTablesContent } from './content/grammarTables.js'
+import { dictionaryCopy, dictionaryEntries } from './content/dictionary.js'
 import { checkJoseSentence } from './utils/joseSentenceChecker.js'
 import { checkCoreVerbsSentence } from './utils/coreVerbsSentenceChecker.js'
 import { checkPositionHouseSentence } from './utils/positionHouseSentenceChecker.js'
@@ -157,7 +158,7 @@ function App() {
       <Sidebar view={view} onNavigate={navigate} flagCount={flaggedItems.length} />
       <main className="main-area">
         <Topbar progress={progress} />
-        {view === 'review' ? <ReviewPage packs={packs} flaggedItems={flaggedItems} onBack={() => navigate('today')} onTrain={setReviewItems} /> : view === 'tables' ? <GrammarTablesPage /> : !activePack ? (
+        {view === 'review' ? <ReviewPage packs={packs} flaggedItems={flaggedItems} onBack={() => navigate('today')} onTrain={setReviewItems} /> : view === 'tables' ? <GrammarTablesPage /> : view === 'dictionary' ? <DictionaryPage /> : !activePack ? (
           <Dashboard
             packs={packs}
             progress={progress}
@@ -181,10 +182,11 @@ function Sidebar({ view, onNavigate, flagCount }) {
       <div className="brand"><span className="brand-mark">ñ</span><span>Spanish<br /><b>Ground</b></span></div>
       <nav>
         <button className={`nav-item ${view === 'today' ? 'active' : ''}`} onClick={() => onNavigate('today')}><Home size={20} /> Home</button>
-        <button className="nav-item"><MessageSquareText size={20} /> Lessons</button>
+        <button className="nav-item nav-lessons"><MessageSquareText size={20} /> Lessons</button>
+        <button className={`nav-item ${view === 'dictionary' ? 'active' : ''}`} onClick={() => onNavigate('dictionary')}><BookOpenText size={20} /> Dictionary</button>
         <button className={`nav-item ${view === 'tables' ? 'active' : ''}`} onClick={() => onNavigate('tables')}><Table2 size={20} /> Tables</button>
         <button className={`nav-item ${view === 'review' ? 'active' : ''}`} onClick={() => onNavigate('review')}><SquareCheckBig size={20} /> Review {flagCount > 0 && <span className="nav-count">{flagCount}</span>}</button>
-        <button className="nav-item"><CircleUserRound size={20} /> Profile</button>
+        <button className="nav-item nav-profile"><CircleUserRound size={20} /> Profile</button>
       </nav>
       <div className="sidebar-bottom">
         <button className="nav-item"><Settings size={20} /> Settings</button>
@@ -203,6 +205,83 @@ function Topbar({ progress }) {
       <div className="stat-pill"><Sparkles size={18} /><b>{progress.xp}</b><span>XP</span></div>
       <button className="round-button"><CircleUserRound /></button>
     </header>
+  )
+}
+
+function normalizeDictionaryText(value) {
+  return String(value || '').toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+function DictionaryPage() {
+  const content = useLocalizedPack(dictionaryCopy)
+  const { language } = useContext(LessonLanguageContext)
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('all')
+  const [sort, setSort] = useState('course')
+  const categoryLabels = useMemo(() => Object.fromEntries(content.categories.map((item) => [item.value, item.label])), [content.categories])
+  const visibleEntries = useMemo(() => {
+    const needle = normalizeDictionaryText(query.trim())
+    const filtered = dictionaryEntries.filter((entry) => {
+      if (category !== 'all' && entry.category !== category) return false
+      if (!needle) return true
+      return normalizeDictionaryText([entry.es, entry.ru, entry.en, entry.example, entry.noteRu, entry.noteEn].join(' ')).includes(needle)
+    })
+    const sorted = [...filtered]
+    if (sort === 'course') return sorted.sort((a, b) => a.order - b.order)
+    const [field, direction] = sort.split('-')
+    const locale = field === 'ru' ? 'ru' : field === 'es' ? 'es' : 'en'
+    return sorted.sort((a, b) => a[field].localeCompare(b[field], locale, { sensitivity: 'base' }) * (direction === 'desc' ? -1 : 1))
+  }, [category, query, sort])
+
+  return (
+    <div className="dictionary-page">
+      <header className="dictionary-hero">
+        <div>
+          <span className="dictionary-eyebrow">SPANISH · RUSSIAN · ENGLISH</span>
+          <h1>{content.title}</h1>
+          <p>{content.subtitle}</p>
+        </div>
+        <div className="dictionary-hero-side">
+          <LessonLanguageToggle pack={dictionaryCopy} className="dictionary-language" />
+          <div className="dictionary-count"><strong>{dictionaryEntries.length}</strong><span>{content.result}</span></div>
+        </div>
+      </header>
+
+      <section className="dictionary-controls" aria-label={content.title}>
+        <label className="dictionary-search">
+          <Search size={19} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={content.search} />
+          {query && <button type="button" onClick={() => setQuery('')} aria-label="Clear search"><X size={16} /></button>}
+        </label>
+        <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label={content.source}>
+          <option value="all">{content.all}</option>
+          {content.categories.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+        </select>
+        <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort dictionary">
+          {content.sortOptions.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+        </select>
+      </section>
+
+      <div className="dictionary-result-line"><b>{visibleEntries.length}</b> {content.result}<span>{content.tapHint}</span></div>
+
+      <section className="dictionary-table" aria-live="polite">
+        <header className="dictionary-table-head"><span>{content.spanish}</span><span>{content.russian}</span><span>{content.english}</span></header>
+        {visibleEntries.length ? visibleEntries.map((entry) => (
+          <details className="dictionary-entry" key={entry.id}>
+            <summary>
+              <span className="dictionary-spanish" data-label={content.spanish}><strong>{entry.es}</strong><small>{categoryLabels[entry.category]}</small></span>
+              <span data-label={content.russian}>{entry.ru}</span>
+              <span data-label={content.english}>{entry.en}</span>
+            </summary>
+            <div className="dictionary-entry-detail">
+              {entry.example && <p><b>{content.example}</b><span>{entry.example}</span></p>}
+              {(entry.noteRu || entry.noteEn) && <p><b>{content.note}</b><span>{language === 'ru' ? entry.noteRu : entry.noteEn}</span></p>}
+              <p><b>{content.source}</b><span>{language === 'ru' ? entry.sourceRu : entry.sourceEn}</span></p>
+            </div>
+          </details>
+        )) : <div className="dictionary-empty"><Search size={25} /><p>{content.noResults}</p></div>}
+      </section>
+    </div>
   )
 }
 
@@ -301,7 +380,7 @@ function ReferenceTable({ table, compact = false }) {
       {table.type === 'ser-estar' && <SerEstarReference table={table} />}
       {table.type === 'gerund' && <GerundReference table={table} />}
       {table.type === 'demonstratives' && <DemonstrativesReference table={table} />}
-      {(table.type === 'regular-present' || table.type === 'regular-past') && <RegularVerbReference table={table} />}
+      {(table.type === 'regular-present' || table.type === 'regular-past' || table.type === 'regular-future') && <RegularVerbReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
