@@ -61,6 +61,74 @@ const manualEntries = [
   ['el gerundio', 'герундий', 'gerund'], ['el presente', 'настоящее время', 'present tense'], ['el pretérito indefinido', 'простое завершённое прошедшее', 'preterite / simple past'], ['el futuro simple', 'простое будущее', 'simple future'],
 ].map(([es, ru, en]) => ({ es, ru, en, category: 'grammar', sourceRu: 'Грамматика и записи уроков', sourceEn: 'Grammar and lesson notes' }))
 
+const joseReflexiveEntries = [
+  {
+    es: 'la ducha', ru: 'душ', en: 'shower (noun)', example: 'La ducha está libre.',
+    noteRu: 'Существительное женского рода: la ducha. Глагол — duchar; «принимать душ» — ducharse.',
+    noteEn: 'Feminine noun: la ducha. The verb is duchar; “to take a shower” is ducharse.',
+  },
+  {
+    es: 'duchar', ru: 'мыть под душем / купать кого-то', en: 'to shower / wash someone', example: 'Voy a duchar al perro.',
+    noteRu: 'Обычный переходный глагол: действие направлено на другого. Когда моешься сам, используй ducharse.',
+    noteEn: 'The non-reflexive verb acts on someone else. Use ducharse when the subject showers themself.',
+  },
+  {
+    es: 'levantarse', ru: 'вставать / подниматься', en: 'to get up', example: 'Me levanto a las siete.',
+    noteRu: 'При спряжении: me levanto, te levantas, se levanta.',
+    noteEn: 'Conjugated as: me levanto, te levantas, se levanta.',
+  },
+  {
+    es: 'ducharse', ru: 'принимать душ', en: 'to take a shower', example: 'Me ducho por la mañana.',
+    noteRu: 'Возвратная форма: me ducho, te duchas, se ducha.',
+    noteEn: 'Reflexive form: me ducho, te duchas, se ducha.',
+  },
+  {
+    es: 'relajarse', ru: 'расслабляться / отдыхать', en: 'to relax', example: 'Nos relajamos después de estudiar.',
+    noteRu: 'Возвратное местоимение показывает, что человек приводит в расслабленное состояние себя.',
+    noteEn: 'The reflexive pronoun shows that the subject relaxes themself.',
+  },
+  {
+    es: 'acostarse', ru: 'ложиться спать', en: 'to go to bed', example: 'Ella se acuesta a las diez.',
+    noteRu: 'Глагол меняет корень: me acuesto, te acuestas, se acuesta; nosotros nos acostamos.',
+    noteEn: 'Stem-changing verb: me acuesto, te acuestas, se acuesta; nosotros nos acostamos.',
+  },
+  {
+    es: 'prepararse', ru: 'готовиться / собираться', en: 'to get ready / prepare oneself', example: 'Me preparo para la clase.',
+    noteRu: 'Обычно: prepararse para algo — готовиться к чему-то.',
+    noteEn: 'Usually used as prepararse para algo — to prepare for something.',
+  },
+  {
+    es: 'organizarse', ru: 'организоваться / организовать свои дела', en: 'to organize oneself / get organized', example: 'Necesito organizarme mejor.',
+    noteRu: 'После инфинитива местоимение присоединяется к нему: necesito organizarme.',
+    noteEn: 'After an infinitive, the pronoun attaches to it: necesito organizarme.',
+  },
+  {
+    es: 'concentrarse', ru: 'сосредотачиваться', en: 'to concentrate', example: 'Me concentro durante la clase.',
+    noteRu: 'Обычно: concentrarse en algo — сосредоточиться на чём-то.',
+    noteEn: 'Usually used as concentrarse en algo — to concentrate on something.',
+  },
+  {
+    es: 'conectarse', ru: 'подключаться / входить в систему', en: 'to connect / log in', example: 'Me conecto a la plataforma.',
+    noteRu: 'Обычно: conectarse a una red / a una plataforma.',
+    noteEn: 'Usually used as conectarse a una red / a una plataforma.',
+  },
+  {
+    es: 'equivocarse', ru: 'ошибаться / быть неправым', en: 'to make a mistake / be wrong', example: 'Me equivoco a veces.',
+    noteRu: 'Испанский выражает «ошибаться» возвратным глаголом: me equivoco, no soy equivocado.',
+    noteEn: 'Spanish uses the reflexive verb for “to be wrong”: me equivoco, not soy equivocado.',
+  },
+  {
+    es: 'comunicarse', ru: 'общаться / связываться', en: 'to communicate', example: 'Nos comunicamos en español.',
+    noteRu: 'Можно сказать comunicarse con alguien — общаться с кем-то.',
+    noteEn: 'Use comunicarse con alguien for “to communicate with someone.”',
+  },
+].map((entry) => ({
+  ...entry,
+  category: 'jose',
+  sourceRu: 'Урок с Хосе: возвратные глаголы',
+  sourceEn: 'Lesson with José: reflexive verbs',
+}))
+
 const normalize = (value) => value.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\u00bf?\u00a1!.,«»]/g, '').trim()
 const packTitle = (pack, language) => typeof pack.title === 'string' ? pack.title : pack.title?.[language] || pack.title?.en || pack.id
 
@@ -88,7 +156,7 @@ function entryFromItem(item, pack) {
   }
 }
 
-const collected = [...manualEntries]
+const collected = [...manualEntries, ...joseReflexiveEntries]
 
 for (const pack of starterPacks) {
   const isSong = pack.id.includes('song')
