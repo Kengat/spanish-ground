@@ -449,6 +449,7 @@ function ReferenceTable({ table, compact = false }) {
       {table.type === 'gerund' && <GerundReference table={table} />}
       {table.type === 'demonstratives' && <DemonstrativesReference table={table} />}
       {(table.type === 'regular-present' || table.type === 'regular-past' || table.type === 'regular-future') && <RegularVerbReference table={table} />}
+      {table.type === 'reflexive' && <ReflexiveVerbReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
@@ -564,6 +565,36 @@ function RegularVerbReference({ table }) {
         {table.contrast && <p>{table.contrast}</p>}
         <p>{table.note}</p>
       </div>
+    </>
+  )
+}
+
+function ReflexiveVerbReference({ table }) {
+  return (
+    <>
+      <section className="reflexive-formula">
+        <b>{table.formulaLabel}</b>
+        <span>{table.formula}</span>
+      </section>
+      <div className="reflexive-pronouns">
+        {table.people.map((person, index) => (
+          <div key={person}><span>{person}</span><strong>{table.pronouns[index]}</strong></div>
+        ))}
+      </div>
+      <section className="reflexive-conjugation">
+        <header><span>{table.exampleVerb}</span><small>{table.infinitiveNote}</small></header>
+        <div>
+          {table.people.map((person, index) => (
+            <p key={person}><span>{person}</span><strong><i>{table.forms[index][0]}</i> {table.forms[index][1]}</strong></p>
+          ))}
+        </div>
+      </section>
+      <div className="reflexive-examples">
+        {table.examples.map(([example, meaning], index) => (
+          <article key={example}><b>{index + 1}</b><div><strong>{example}</strong><span>{meaning}</span></div></article>
+        ))}
+      </div>
+      <p className="reflexive-spain">{table.spain}</p>
     </>
   )
 }
