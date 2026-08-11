@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import {
   ArrowLeft, ArrowRight, Bookmark, BookOpen, Brain, Check, ChevronRight, CircleUserRound,
   BookOpenText, Coffee, Flag, Flame, Home, Menu, MessageSquareText, MessagesSquare, Plus, RotateCcw, Search, Settings,
-  Maximize2, Music2, Sparkles, SquareCheckBig, Table2, Target, Volume2, X, Zap,
+  Maximize2, Music2, NotebookPen, Sparkles, SquareCheckBig, Table2, Target, Volume2, X, Zap,
 } from 'lucide-react'
 import { starterPacks } from './content/lessonPacks.js'
 import { grammarTablesContent } from './content/grammarTables.js'
@@ -29,6 +29,7 @@ const modes = [
 const initialProgress = { xp: 120, streak: 3, completed: [], modeCompletions: {}, mistakes: 4 }
 const FlagContext = createContext({ flaggedItems: [], toggleFlag: () => {} })
 const LessonLanguageContext = createContext({ language: 'ru', setLanguage: () => {} })
+const NotebookContext = createContext({ openNotebook: () => {}, notebookOpen: false })
 
 function localizeLessonData(value, language) {
   if (Array.isArray(value)) return value.map((item) => localizeLessonData(item, language))
@@ -74,6 +75,69 @@ function usePersistedState(key, fallback) {
   })
   useEffect(() => localStorage.setItem(key, JSON.stringify(value)), [key, value])
   return [value, setValue]
+}
+
+function PersistentNotebook({ children, showLauncher = false }) {
+  const { language } = useContext(LessonLanguageContext)
+  const [note, setNote] = usePersistedState('sg-notebook', '')
+  const [open, setOpen] = useState(false)
+  const [viewport, setViewport] = useState({ visibleHeight: 800, keyboardOffset: 0 })
+  const textareaRef = useRef(null)
+  const layoutHeightRef = useRef(800)
+  const copy = language === 'ru'
+    ? { title: 'Блокнот', saved: 'Сохраняется автоматически', placeholder: 'Пиши здесь…', open: 'Открыть блокнот', close: 'Закрыть блокнот' }
+    : { title: 'Notes', saved: 'Saved automatically', placeholder: 'Write here…', open: 'Open notes', close: 'Close notes' }
+
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return undefined
+    layoutHeightRef.current = Math.max(window.innerHeight, window.visualViewport?.height || 0)
+    const visualViewport = window.visualViewport
+    const updateViewport = () => {
+      const visibleHeight = visualViewport?.height || window.innerHeight
+      const rawKeyboardOffset = Math.max(0, layoutHeightRef.current - visibleHeight - (visualViewport?.offsetTop || 0))
+      setViewport({ visibleHeight, keyboardOffset: rawKeyboardOffset > 110 ? rawKeyboardOffset : 0 })
+    }
+    updateViewport()
+    visualViewport?.addEventListener('resize', updateViewport)
+    visualViewport?.addEventListener('scroll', updateViewport)
+    window.addEventListener('resize', updateViewport)
+    return () => {
+      visualViewport?.removeEventListener('resize', updateViewport)
+      visualViewport?.removeEventListener('scroll', updateViewport)
+      window.removeEventListener('resize', updateViewport)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return undefined
+    const focusTimer = window.setTimeout(() => textareaRef.current?.focus({ preventScroll: true }), 60)
+    return () => window.clearTimeout(focusTimer)
+  }, [open])
+
+  const openNotebook = () => setOpen(true)
+  const visibleHeight = Math.max(1, viewport.visibleHeight)
+  const notebookHeight = Math.min(layoutHeightRef.current * 0.46, visibleHeight * 0.48)
+  const notebookBottom = viewport.keyboardOffset > 0 ? viewport.keyboardOffset + 8 : 86
+
+  return (
+    <NotebookContext.Provider value={{ openNotebook, notebookOpen: open }}>
+      {children}
+      {showLauncher && !open && <button type="button" className="notebook-launcher" onClick={openNotebook} aria-label={copy.open}><NotebookPen size={19} /><span>{copy.title}</span></button>}
+      {open && (
+        <section
+          className="persistent-notebook"
+          style={{ '--notebook-height': `${notebookHeight}px`, '--notebook-bottom': `${notebookBottom}px` }}
+          aria-label={copy.title}
+        >
+          <header>
+            <div className="notebook-heading"><span><NotebookPen size={18} /></span><div><strong>{copy.title}</strong><small>{copy.saved}</small></div></div>
+            <button type="button" onClick={() => setOpen(false)} aria-label={copy.close}><X size={18} /></button>
+          </header>
+          <textarea ref={textareaRef} value={note} onChange={(event) => setNote(event.target.value)} placeholder={copy.placeholder} spellCheck="true" />
+        </section>
+      )}
+    </NotebookContext.Provider>
+  )
 }
 
 function flagItemFor(pack, item) {
@@ -148,7 +212,7 @@ function App() {
     setActiveMode(null)
   }
 
-  const withProviders = (children) => <LessonLanguageContext.Provider value={{ language: lessonLanguage, setLanguage: setLessonLanguage }}><FlagContext.Provider value={{ flaggedItems, toggleFlag }}>{children}</FlagContext.Provider></LessonLanguageContext.Provider>
+  const withProviders = (children, showNotebookLauncher = true) => <LessonLanguageContext.Provider value={{ language: lessonLanguage, setLanguage: setLessonLanguage }}><FlagContext.Provider value={{ flaggedItems, toggleFlag }}><PersistentNotebook showLauncher={showNotebookLauncher}>{children}</PersistentNotebook></FlagContext.Provider></LessonLanguageContext.Provider>
 
   if (activePack && activeMode) return withProviders(<Exercise pack={activePack} mode={activeMode} onBack={() => setActiveMode(null)} onAward={award} onFinish={finish} />)
   if (reviewItems) return withProviders(<FlaggedTrainer items={reviewItems} onBack={() => setReviewItems(null)} onAward={award} />)
@@ -172,11 +236,14 @@ function App() {
         )}
       </main>
       {showImport && <ImportModal onClose={() => setShowImport(false)} onSave={(pack) => { setCustomPacks((old) => [...old, pack]); setShowImport(false) }} />}
-    </div>
+    </div>,
+    false,
   )
 }
 
 function Sidebar({ view, onNavigate, flagCount }) {
+  const { language } = useContext(LessonLanguageContext)
+  const { openNotebook, notebookOpen } = useContext(NotebookContext)
   return (
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark">ñ</span><span>Spanish<br /><b>Ground</b></span></div>
@@ -186,6 +253,7 @@ function Sidebar({ view, onNavigate, flagCount }) {
         <button className={`nav-item ${view === 'dictionary' ? 'active' : ''}`} onClick={() => onNavigate('dictionary')}><BookOpenText size={20} /> Dictionary</button>
         <button className={`nav-item ${view === 'tables' ? 'active' : ''}`} onClick={() => onNavigate('tables')}><Table2 size={20} /> Tables</button>
         <button className={`nav-item ${view === 'review' ? 'active' : ''}`} onClick={() => onNavigate('review')}><SquareCheckBig size={20} /> Review {flagCount > 0 && <span className="nav-count">{flagCount}</span>}</button>
+        <button className={`nav-item nav-notebook ${notebookOpen ? 'active' : ''}`} onClick={openNotebook}><NotebookPen size={20} /> {language === 'ru' ? 'Блокнот' : 'Notes'}</button>
         <button className="nav-item nav-profile"><CircleUserRound size={20} /> Profile</button>
       </nav>
       <div className="sidebar-bottom">

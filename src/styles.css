@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 
 :root { --ink:#18302d; --muted:#6d7772; --paper:#f7f4ed; --white:#fffdf8; --line:#deddd4; --green:#183f36; --lime:#d9ef8b; --coral:#ec795f; --blue:#7bb7d2; --yellow:#edc95e; --mint:#9bcbb6; font-family:'DM Sans',sans-serif; color:var(--ink); background:var(--paper); font-synthesis:none; }
-* { box-sizing:border-box; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body { margin:0; min-width:320px; min-height:100vh; }
 button,input,textarea { font:inherit; }
 button { color:inherit; }
@@ -88,7 +88,7 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
   body{background:linear-gradient(155deg,#fffaf7 0%,#fdf0ea 100%)}
   .app-shell{display:block;padding-bottom:82px}
   .sidebar{display:flex;position:fixed;inset:auto 10px 10px;width:auto;height:68px;padding:7px 8px;border:1px solid rgba(235,209,202,.9);border-radius:23px;background:rgba(255,252,250,.92);box-shadow:0 14px 36px rgba(103,33,45,.14);z-index:40}
-  .sidebar .brand,.sidebar-bottom{display:none}.sidebar nav{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;width:100%}.nav-item{padding:7px 8px;justify-content:center;flex-direction:column;gap:3px;font-size:9px;border-radius:16px}.nav-item svg{width:20px;height:20px}.nav-count{position:absolute;margin:0 0 25px 19px;min-width:17px;height:17px;font-size:8px}
+  .sidebar .brand,.sidebar-bottom{display:none}.sidebar nav{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;width:100%}.nav-item{padding:7px 5px;justify-content:center;flex-direction:column;gap:3px;font-size:8px;border-radius:16px}.nav-item svg{width:19px;height:19px}.nav-count{position:absolute;margin:0 0 25px 19px;min-width:17px;height:17px;font-size:8px}
   .main-area{margin:0;width:100%}.topbar{height:66px;padding:0 16px}.mobile-menu{display:none}.stat-pill{height:34px;padding:0 10px}.round-button{width:36px;height:36px}
   .page{padding:28px 18px 34px}.hero{align-items:flex-start;margin-bottom:24px}.hero .kicker{display:none}.hero h1{font-size:34px;line-height:1.04;margin-top:2px}.hero h1 span{font-size:27px}.hero p{font-size:14px;line-height:1.4;max-width:250px}.daily-ring{width:76px;height:76px;border-width:6px;flex:0 0 auto}.daily-ring small{display:none}
   .continue-card{min-height:385px;border-radius:28px;display:flex;flex-direction:column}.continue-copy{padding:28px 25px 22px}.continue-copy h2{font-size:29px}.continue-copy p{font-size:13px;margin-bottom:20px}.scene-art{display:block;min-height:150px;margin-top:auto}.awning{top:22px;height:33px}.window{top:48px;height:73px;border-width:7px}.sun{top:15px;width:48px;height:48px}.plant{bottom:30px;font-size:49px}.table{bottom:28px}.chair{bottom:12px}.scene-art:after{height:31px}.light-button{min-height:45px}
@@ -418,18 +418,35 @@ h1,h2,h3,.hero h1,.pack-hero h1,.exercise-content>h1,.continue-copy h2,.section-
 }
 
 @media(max-width:760px){
-  .sidebar nav{grid-template-columns:repeat(4,1fr)}.sidebar .nav-lessons,.sidebar .nav-profile{display:none}
+  .sidebar nav{grid-template-columns:repeat(5,1fr)}.sidebar .nav-lessons,.sidebar .nav-profile{display:none}
   .table-topic-switcher{display:flex;grid-template-columns:none;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:2px}.table-topic-switcher::-webkit-scrollbar{display:none}.table-topic-switcher button{flex:0 0 72px;scroll-snap-align:start}
   .dictionary-page{min-height:calc(100dvh - 78px);padding:5px 20px 30px}.dictionary-page:before{left:18px;top:130px;width:55px;height:65px;background-size:9px 9px}
   .dictionary-hero{margin-bottom:17px;align-items:flex-start;gap:10px}.dictionary-eyebrow{font-size:7px;letter-spacing:1px;margin-bottom:6px}.dictionary-hero h1{font-size:27px;line-height:1.02;letter-spacing:-1.25px}.dictionary-hero p{margin-top:8px;font-size:10px;line-height:1.42}
   .dictionary-hero-side{flex-direction:column;align-items:flex-end;gap:7px}.dictionary-language button{min-width:30px;padding:0 7px}.dictionary-count{min-width:0;width:78px;height:53px;padding:8px 9px;border-radius:16px;display:block;text-align:center}.dictionary-count strong{display:block;font-size:20px}.dictionary-count span{display:none}
   .dictionary-controls{margin-bottom:10px;padding:7px;border-radius:19px;grid-template-columns:1fr;gap:6px}.dictionary-search{grid-column:auto;height:44px;border-radius:13px;padding:0 11px}.dictionary-search input{font-size:10px}.dictionary-controls select{height:40px;border-radius:13px;font-size:9px}
   .dictionary-result-line{margin-bottom:7px;font-size:9px}.dictionary-result-line b{font-size:12px}.dictionary-result-line span{display:none}
-  .dictionary-table{border-radius:19px}.dictionary-table-head{display:none}.dictionary-entry summary{display:block;padding:12px 14px}.dictionary-entry summary>span{min-height:0;padding:5px 0;border:0;display:block;font-size:11px}.dictionary-entry summary>span:before{content:attr(data-label);display:block;margin-bottom:2px;color:#a13a54;font-size:6px;font-weight:800;letter-spacing:.75px;text-transform:uppercase}.dictionary-spanish strong{font-size:15px}.dictionary-spanish small{display:inline-flex;margin:5px 0 1px;font-size:6px}.dictionary-entry-detail{padding:9px;grid-template-columns:1fr;gap:6px}.dictionary-entry-detail p{padding:9px 10px;border-radius:12px;font-size:10px}
+  .dictionary-table{border-radius:19px}.dictionary-table-head{display:grid;grid-template-columns:minmax(0,1.08fr) repeat(2,minmax(0,1fr))}.dictionary-table-head span{padding:9px 6px;font-size:6px;letter-spacing:.55px}.dictionary-entry summary{display:grid;grid-template-columns:minmax(0,1.08fr) repeat(2,minmax(0,1fr));padding:0}.dictionary-entry summary>span{min-width:0;min-height:58px;padding:8px 6px;border-right:1px solid #f2e2dd;display:flex;font-size:clamp(8px,2.45vw,10px);line-height:1.25;overflow-wrap:anywhere}.dictionary-entry summary>span:before{content:none}.dictionary-entry summary>span:last-child{border-right:0}.dictionary-spanish strong{font-size:clamp(10px,2.8vw,13px);overflow-wrap:anywhere}.dictionary-spanish small{display:inline-flex;margin:4px 0 0;padding:2px 4px;font-size:5px;white-space:normal}.dictionary-entry-detail{padding:9px;grid-template-columns:1fr;gap:6px}.dictionary-entry-detail p{padding:9px 10px;border-radius:12px;font-size:10px}
 }
 
 @media(max-width:380px){
-  .dictionary-page{padding-left:15px;padding-right:15px}.dictionary-hero h1{font-size:24px}.dictionary-hero p{max-width:210px}.dictionary-count{width:66px}
+  .dictionary-page{padding-left:15px;padding-right:15px}.dictionary-hero h1{font-size:24px}.dictionary-hero p{max-width:210px}.dictionary-count{width:66px}.dictionary-table-head span{padding-left:4px;padding-right:4px;font-size:5.5px}.dictionary-entry summary>span{padding-left:4px;padding-right:4px;font-size:8px}.dictionary-spanish strong{font-size:10px}
+}
+
+/* Persistent notebook — a compact layer that stays available across the whole app. */
+.notebook-launcher{position:fixed;right:22px;bottom:22px;z-index:78;min-height:44px;padding:0 16px;border:1px solid #e9cfc8;border-radius:999px;background:linear-gradient(135deg,#9d2549,#741630);color:#fff;display:flex;align-items:center;gap:8px;font-weight:700;font-size:11px;box-shadow:0 13px 30px rgba(112,22,48,.24);cursor:pointer}
+.persistent-notebook{position:fixed;right:20px;bottom:20px;z-index:90;width:min(390px,calc(100vw - 28px));height:min(480px,52dvh);overflow:hidden;border:1px solid #edcfca;border-radius:25px;background:rgba(255,250,248,.98);box-shadow:0 22px 65px rgba(77,24,37,.25);display:flex;flex-direction:column;animation:notebook-rise .2s ease-out}
+.persistent-notebook>header{min-height:62px;padding:10px 12px 10px 15px;border-bottom:1px solid #f0dcd6;background:linear-gradient(145deg,#fff8f4,#fdeae4);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.notebook-heading{min-width:0;display:flex;align-items:center;gap:10px}.notebook-heading>span{width:36px;height:36px;flex:0 0 36px;border-radius:13px;background:#f9dfd9;color:#8b1d3f;display:grid;place-items:center}.notebook-heading>div{min-width:0;display:flex;flex-direction:column}.notebook-heading strong{font:800 14px/1.2 'Manrope',sans-serif;color:#321b21}.notebook-heading small{margin-top:2px;color:#98757e;font-size:8px;line-height:1.2}
+.persistent-notebook>header>button{width:34px;height:34px;flex:0 0 34px;padding:0;border:1px solid #ecd5cf;border-radius:50%;background:#fffaf8;color:#7e2841;display:grid;place-items:center;cursor:pointer}
+.persistent-notebook textarea{width:100%;min-height:0;flex:1;resize:none;padding:17px 18px 22px;border:0;outline:0;background-color:#fffdfb;background-image:linear-gradient(to bottom,transparent 27px,#f3dfd9 28px);background-size:100% 28px;color:#35262a;font:500 13px/28px 'DM Sans',sans-serif;caret-color:#8d1d40}
+.persistent-notebook textarea::placeholder{color:#b28e97}
+@keyframes notebook-rise{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:760px){
+  .notebook-launcher{right:16px;bottom:89px;min-width:44px;min-height:44px;padding:0 12px}.notebook-launcher span{display:none}
+  .persistent-notebook{right:8px;bottom:var(--notebook-bottom,86px);width:calc(100vw - 16px);height:var(--notebook-height,46dvh);max-height:48dvh;border-radius:22px}
+  .persistent-notebook>header{min-height:54px;padding:8px 10px 8px 13px}.notebook-heading>span{width:32px;height:32px;flex-basis:32px;border-radius:11px}.notebook-heading strong{font-size:13px}.notebook-heading small{font-size:7px}
+  .persistent-notebook textarea{padding:10px 15px 14px;font-size:12px;line-height:26px;background-size:100% 26px}
 }
 
 /* Interactive song studio: synced YouTube playback, clickable transcript and word-level explanations. */
