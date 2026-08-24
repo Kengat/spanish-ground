@@ -450,6 +450,7 @@ function ReferenceTable({ table, compact = false }) {
       {table.type === 'demonstratives' && <DemonstrativesReference table={table} />}
       {(table.type === 'regular-present' || table.type === 'regular-past' || table.type === 'regular-future') && <RegularVerbReference table={table} />}
       {table.type === 'reflexive' && <ReflexiveVerbReference table={table} />}
+      {table.type === 'imperfect' && <ImperfectReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
@@ -595,6 +596,45 @@ function ReflexiveVerbReference({ table }) {
         ))}
       </div>
       <p className="reflexive-spain">{table.spain}</p>
+    </>
+  )
+}
+
+function ImperfectReference({ table }) {
+  return (
+    <>
+      <section className="imperfect-use"><b>{table.useLabel}</b><span>{table.use}</span></section>
+      <div className="imperfect-families">
+        {table.families.map((family) => (
+          <section className={`imperfect-family tone-${family.tone}`} key={family.family}>
+            <header><h3>{family.family}</h3><p>{family.instruction}</p></header>
+            <div className="imperfect-conjugation">
+              {table.people.map((person, index) => (
+                <p key={person}>
+                  <span>{person}</span>
+                  <small>{family.endings[index]}</small>
+                  <strong>{family.examples[index][0]}<i>{family.examples[index][1]}</i>{family.secondExamples && <> / {family.secondExamples[index][0]}<i>{family.secondExamples[index][1]}</i></>}</strong>
+                </p>
+              ))}
+            </div>
+            <footer>{family.infinitive}</footer>
+          </section>
+        ))}
+      </div>
+      <section className="imperfect-irregulars">
+        <h3>{table.irregularTitle}</h3>
+        <div>
+          {table.irregulars.map((verb) => (
+            <article className={`tone-${verb.tone}`} key={verb.name}>
+              <b>{verb.name}</b>
+              <span>{verb.forms.join(' · ')}</span>
+            </article>
+          ))}
+        </div>
+      </section>
+      <div className="imperfect-examples">
+        {table.examples.map(([example, meaning]) => <p key={example}><strong>{example}</strong><span>{meaning}</span></p>)}
+      </div>
     </>
   )
 }
