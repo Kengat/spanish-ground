@@ -451,6 +451,7 @@ function ReferenceTable({ table, compact = false }) {
       {(table.type === 'regular-present' || table.type === 'regular-past' || table.type === 'regular-future') && <RegularVerbReference table={table} />}
       {table.type === 'reflexive' && <ReflexiveVerbReference table={table} />}
       {table.type === 'imperfect' && <ImperfectReference table={table} />}
+      {table.type === 'estuve-gerundio' && <EstuveGerundioReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
@@ -633,6 +634,43 @@ function ImperfectReference({ table }) {
         </div>
       </section>
       <div className="imperfect-examples">
+        {table.examples.map(([example, meaning]) => <p key={example}><strong>{example}</strong><span>{meaning}</span></p>)}
+      </div>
+    </>
+  )
+}
+
+function EstuveGerundioReference({ table }) {
+  return (
+    <>
+      <section className="estuve-formula">
+        <div><strong>{table.formulaAuxiliary}</strong><b>+</b><strong>{table.formulaGerund}</strong></div>
+        <p>{table.purpose}</p>
+      </section>
+      <div className="estuve-building-blocks">
+        <section className="estuve-estar">
+          <h3>{table.estarTitle}</h3>
+          <div>{table.people.map((person, index) => <p key={person}><span>{person}</span><strong>{table.estarForms[index]}</strong></p>)}</div>
+        </section>
+        <section className="estuve-gerund">
+          <h3>{table.gerundTitle}</h3>
+          {table.gerundRules.map((rule) => (
+            <div className={`tone-${rule.tone}`} key={rule.family}>
+              <header><b>{rule.family}</b><span>→</span><strong>{rule.ending}</strong></header>
+              {rule.examples.map(([verb, gerund]) => <p key={verb}><span>{verb}</span><strong>{gerund}</strong></p>)}
+            </div>
+          ))}
+        </section>
+      </div>
+      <section className="estuve-model">
+        <h3>{table.modelTitle}</h3>
+        <div>{table.people.map((person, index) => <p key={person}><span>{person}</span><strong><b>{table.estarForms[index]}</b> {table.modelGerund}</strong></p>)}</div>
+      </section>
+      <section className="estuve-contrast">
+        <h3>{table.compareTitle}</h3>
+        <div>{table.compare.map((item) => <article className={`tone-${item.tone}`} key={item.es}><b>{item.label}</b><strong>{item.es}</strong><span>{item.meaning}</span></article>)}</div>
+      </section>
+      <div className="estuve-examples">
         {table.examples.map(([example, meaning]) => <p key={example}><strong>{example}</strong><span>{meaning}</span></p>)}
       </div>
     </>
