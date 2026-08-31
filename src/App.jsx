@@ -452,6 +452,8 @@ function ReferenceTable({ table, compact = false }) {
       {table.type === 'reflexive' && <ReflexiveVerbReference table={table} />}
       {table.type === 'imperfect' && <ImperfectReference table={table} />}
       {table.type === 'estuve-gerundio' && <EstuveGerundioReference table={table} />}
+      {table.type === 'tener-forms' && <TenerFormsReference table={table} />}
+      {table.type === 'haber-forms' && <HaberFormsReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
@@ -673,6 +675,56 @@ function EstuveGerundioReference({ table }) {
       <div className="estuve-examples">
         {table.examples.map(([example, meaning]) => <p key={example}><strong>{example}</strong><span>{meaning}</span></p>)}
       </div>
+    </>
+  )
+}
+
+function TenerFormsReference({ table }) {
+  return (
+    <>
+      <div className="tener-forms-grid">
+        {table.forms.map((tense) => (
+          <section className={`tener-tense tone-${tense.tone}`} key={tense.name}>
+            <header><h3>{tense.name}</h3><span>{tense.cue}</span></header>
+            {tense.featured ? (
+              <div className="tener-infinitive"><strong>{tense.featured}</strong></div>
+            ) : (
+              <div className="tener-conjugation">
+                {table.people.map((person, index) => <p key={person}><span>{person}</span><strong>{tense.forms[index]}</strong></p>)}
+              </div>
+            )}
+            <footer><strong>{tense.example[0]}</strong><span>{tense.example[1]}</span></footer>
+          </section>
+        ))}
+      </div>
+      <section className="tener-patterns">
+        <h3>{table.quickTitle}</h3>
+        <div>{table.patterns.map(([pattern, meaning, example]) => <article key={pattern}><b>{pattern}</b><span>{meaning}</span><strong>{example}</strong></article>)}</div>
+      </section>
+    </>
+  )
+}
+
+function HaberFormsReference({ table }) {
+  return (
+    <>
+      <section className="haber-infinitive">
+        <div><span>INFINITIVO</span><strong>{table.infinitive.form}</strong></div>
+        <p><b>{table.infinitive.example[0]}</b><span>{table.infinitive.example[1]}</span></p>
+      </section>
+      <div className="haber-timeline">
+        {table.timeline.map((moment) => (
+          <section className={`haber-moment tone-${moment.tone}`} key={moment.form}>
+            <header><span>{moment.time}</span><h3>{moment.form}</h3><b>{moment.name}</b></header>
+            <p>{moment.use}</p>
+            <div>{moment.examples.map((example) => <strong key={example}>{example}</strong>)}</div>
+          </section>
+        ))}
+      </div>
+      <section className="haber-contrast">
+        <h3>{table.contrastTitle}</h3>
+        <div>{table.contrasts.map(([singular, plural]) => <p key={singular}><span>{singular}</span><b>/</b><strong>{plural}</strong></p>)}</div>
+      </section>
     </>
   )
 }
