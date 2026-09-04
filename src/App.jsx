@@ -452,8 +452,9 @@ function ReferenceTable({ table, compact = false }) {
       {table.type === 'reflexive' && <ReflexiveVerbReference table={table} />}
       {table.type === 'imperfect' && <ImperfectReference table={table} />}
       {table.type === 'estuve-gerundio' && <EstuveGerundioReference table={table} />}
-      {table.type === 'tener-forms' && <TenerFormsReference table={table} />}
+      {(table.type === 'tener-forms' || table.type === 'hacer-forms') && <TenerFormsReference table={table} />}
       {table.type === 'haber-forms' && <HaberFormsReference table={table} />}
+      {table.type === 'object-pronouns' && <ObjectPronounsReference table={table} />}
       <div className="reference-memory"><Sparkles size={15} /><span>{table.memory}</span></div>
     </div>
   )
@@ -697,10 +698,13 @@ function TenerFormsReference({ table }) {
           </section>
         ))}
       </div>
-      <section className="tener-patterns">
-        <h3>{table.quickTitle}</h3>
-        <div>{table.patterns.map(([pattern, meaning, example]) => <article key={pattern}><b>{pattern}</b><span>{meaning}</span><strong>{example}</strong></article>)}</div>
-      </section>
+      {table.patterns && <section className="tener-patterns"><h3>{table.quickTitle}</h3><div>{table.patterns.map(([pattern, meaning, example]) => <article key={pattern}><b>{pattern}</b><span>{meaning}</span><strong>{example}</strong></article>)}</div></section>}
+      {table.progressives && (
+        <section className="hacer-progressives">
+          <h3>{table.progressiveTitle}</h3>
+          <div>{table.progressives.map((item) => <article className={`tone-${item.tone}`} key={item.form}><strong>{item.form}</strong><span>{item.example}</span><b>{item.cue}</b></article>)}</div>
+        </section>
+      )}
     </>
   )
 }
@@ -724,6 +728,44 @@ function HaberFormsReference({ table }) {
       <section className="haber-contrast">
         <h3>{table.contrastTitle}</h3>
         <div>{table.contrasts.map(([singular, plural]) => <p key={singular}><span>{singular}</span><b>/</b><strong>{plural}</strong></p>)}</div>
+      </section>
+    </>
+  )
+}
+
+function ObjectPronounsReference({ table }) {
+  const ModelSentence = () => <p className="objects-model"><span>{table.model.start}</span> <strong>{table.model.direct}</strong> <span>{table.model.connector}</span> <b>{table.model.indirect}</b></p>
+  return (
+    <>
+      <div className="objects-definitions">
+        {table.definitions.map((item) => <section className={`tone-${item.tone}`} key={item.key}><b>{item.key}</b><div><h3>{item.title}</h3><p>{item.text}</p></div></section>)}
+      </div>
+      <ModelSentence />
+      <div className="objects-analysis">
+        <section className="object-analysis-panel tone-blue">
+          <h3>{table.direct.title}</h3>
+          <p><span>1</span>{table.direct.question}</p><p><span>2</span><strong>{table.direct.answer}</strong></p>
+          <div><b>{table.direct.answer}</b><i>→</i><strong>{table.direct.pronoun}</strong></div>
+          <footer>{table.direct.result}</footer>
+        </section>
+        <section className="object-analysis-panel tone-green">
+          <h3>{table.indirect.title}</h3>
+          <p><span>1</span>{table.indirect.question}</p><p><span>2</span><strong>{table.indirect.answer}</strong></p>
+          <div><b>{table.indirect.answer}</b><i>→</i><strong>{table.indirect.pronoun}</strong></div>
+          <footer>{table.indirect.result}</footer>
+        </section>
+      </div>
+      <div className="object-pronoun-tables">
+        <section className="tone-blue"><h3>{table.directTitle}</h3>{table.directPronouns.map(([person, pronoun]) => <p key={person}><span>{person}</span><strong>{pronoun}</strong></p>)}</section>
+        <section className="tone-green"><h3>{table.indirectTitle}</h3>{table.indirectPronouns.map(([person, pronoun]) => <p key={person}><span>{person}</span><strong>{pronoun}</strong></p>)}</section>
+      </div>
+      <section className="objects-together tone-purple">
+        <h3>{table.togetherTitle}</h3>
+        <div>{table.togetherSteps.map((step) => <span key={step}>{step}</span>)}<strong>{table.togetherResult}</strong></div>
+        <p>{table.togetherRule}</p>
+      </section>
+      <section className="object-person-case">
+        <h3>{table.personTitle}</h3><strong>{table.personExample}</strong><p>{table.personNote}</p>
       </section>
     </>
   )
